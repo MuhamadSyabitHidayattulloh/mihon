@@ -196,9 +196,9 @@ class Downloader(
                     val activeDownloads = queue.asSequence()
                         // Ignore completed downloads, leave them in the queue
                         .filter { it.status.value <= Download.State.DOWNLOADING.value }
-                        .groupBy { it.source }
+                        .groupBy { it.manga.id } // <--- Ubah dari per source ke per manga
                         .toList()
-                        // Concurrently download from 5 different sources
+                        // Concurrently download dari 5 manga berbeda
                         .take(5)
                         .map { (_, downloads) -> downloads.first() }
                     emit(activeDownloads)

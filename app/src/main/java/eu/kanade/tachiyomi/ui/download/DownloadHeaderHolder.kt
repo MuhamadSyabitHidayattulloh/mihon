@@ -14,7 +14,12 @@ class DownloadHeaderHolder(view: View, adapter: FlexibleAdapter<*>) : Expandable
     @SuppressLint("SetTextI18n")
     fun bind(item: DownloadHeaderItem) {
         setDragHandleView(binding.reorder)
-        binding.title.text = "${item.name} (${item.size})"
+        val percent = (item.progress * 100).toInt()
+        binding.title.text = if (percent in 1..99) {
+            "${item.name} ($percent%) (${item.size})"
+        } else {
+            "${item.name} (${item.size})"
+        }
     }
 
     override fun onActionStateChanged(position: Int, actionState: Int) {
