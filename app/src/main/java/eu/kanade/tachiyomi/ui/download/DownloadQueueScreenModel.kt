@@ -120,10 +120,16 @@ class DownloadQueueScreenModel(
             downloadManager.queueState
                 .map { downloads ->
                     downloads
-                        .groupBy { it.source }
+                        .groupBy { it.manga.id to it.manga.title }
                         .map { entry ->
-                            DownloadHeaderItem(entry.key.id, entry.key.name, entry.value.size).apply {
-                                addSubItems(0, entry.value.map { DownloadItem(it, this) })
+                            val (mangaId, mangaTitle) = entry.key
+                            val items = entry.value
+                            // Hitung progress total manga
+                            val totalPages = items.sumOf { it.pages?.size ?: 0 }
+                            val downloadedPages = items.sumOf { it.downloadedImages }
+                            val progress = if (totalPages > 0) downloadedPages.toFloat() / totalPages else 0f
+                            DownloadHeaderItem(mangaId, mangaTitle, items.size, progress).apply {
+                                addSubItems(0, items.map { DownloadItem(it, this) })
                             }
                         }
                 }
