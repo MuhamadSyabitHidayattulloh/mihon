@@ -61,41 +61,34 @@ internal class DownloadNotifier(private val context: Context) {
      * those can only be dismissed by the user.
      */
     fun dismissProgress() {
-        context.cancelNotification(Notifications.ID_DOWNLOAD_CHAPTER_PROGRESS)
+        // No-op or keep for compatibility
     }
 
     /**
-     * Called when download progress changes.
-     *
-     * @param download download object containing download information.
+     * Shows a notification for each manga being downloaded.
+     * Uses manga.id.hashCode() as the notification ID.
      */
     fun onProgressChange(download: Download) {
+        val notificationId = download.manga.id.hashCode()
         with(progressNotificationBuilder) {
-            if (!isDownloading) {
-                setSmallIcon(android.R.drawable.stat_sys_download)
-                clearActions()
-                // Open download manager when clicked
-                setContentIntent(NotificationHandler.openDownloadManagerPendingActivity(context))
-                isDownloading = true
-                // Pause action
-                addAction(
-                    R.drawable.ic_pause_24dp,
-                    context.stringResource(MR.strings.action_pause),
-                    NotificationReceiver.pauseDownloadsPendingBroadcast(context),
-                )
-                addAction(
-                    R.drawable.ic_book_24dp,
-                    context.stringResource(MR.strings.action_show_manga),
-                    NotificationReceiver.openEntryPendingActivity(context, download.manga.id),
-                )
-            }
-
+            setSmallIcon(android.R.drawable.stat_sys_download)
+            clearActions()
+            setContentIntent(NotificationHandler.openDownloadManagerPendingActivity(context))
+            addAction(
+                R.drawable.ic_pause_24dp,
+                context.stringResource(MR.strings.action_pause),
+                NotificationReceiver.pauseDownloadsPendingBroadcast(context),
+            )
+            addAction(
+                R.drawable.ic_book_24dp,
+                context.stringResource(MR.strings.action_show_manga),
+                NotificationReceiver.openEntryPendingActivity(context, download.manga.id),
+            )
             val downloadingProgressText = context.stringResource(
                 MR.strings.chapter_downloading_progress,
                 download.downloadedImages,
-                download.pages!!.size,
+                download.pages?.size ?: 0,
             )
-
             if (preferences.hideNotificationContent().get()) {
                 setContentTitle(downloadingProgressText)
                 setContentText(null)
@@ -109,12 +102,17 @@ internal class DownloadNotifier(private val context: Context) {
                 setContentTitle("$title - $chapter".chop(30))
                 setContentText(downloadingProgressText)
             }
-
-            setProgress(download.pages!!.size, download.downloadedImages, false)
+            setProgress(download.pages?.size ?: 0, download.downloadedImages, false)
             setOngoing(true)
-
-            show(Notifications.ID_DOWNLOAD_CHAPTER_PROGRESS)
+            context.notify(notificationId, build())
         }
+    }
+
+    /**
+     * Dismiss the notification for a manga when its download is complete or errored.
+     */
+    fun dismissMangaProgress(mangaId: Long) {
+        context.cancelNotification(mangaId.hashCode())
     }
 
     /**
@@ -151,13 +149,10 @@ internal class DownloadNotifier(private val context: Context) {
     }
 
     /**
-     * Resets the state once downloads are completed.
+     * Resets the state once downloads are completed (legacy, not per-manga).
      */
     fun onComplete() {
-        dismissProgress()
-
-        // Reset states to default
-        isDownloading = false
+        // No-op or keep for compatibility
     }
 
     /**

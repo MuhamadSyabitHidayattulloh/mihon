@@ -386,6 +386,7 @@ class Downloader(
 
             if (!isDownloadSuccessful(download, tmpDir)) {
                 download.status = Download.State.ERROR
+                notifier.dismissMangaProgress(download.manga.id)
                 return
             }
 
@@ -407,6 +408,7 @@ class Downloader(
             DiskUtil.createNoMediaFile(tmpDir, context)
 
             download.status = Download.State.DOWNLOADED
+            notifier.dismissMangaProgress(download.manga.id)
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
             // If the page list threw, it will resume here
