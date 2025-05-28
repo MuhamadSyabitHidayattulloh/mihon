@@ -11,7 +11,8 @@ data class DownloadHeaderItem(
     val id: Long,
     val name: String,
     val size: Int,
-    var progress: Float = 0f // progress 0..1
+    // progress 0..1
+    var progress: Float = 0f
 ) : AbstractExpandableHeaderItem<DownloadHeaderHolder, DownloadItem>() {
 
     override fun getLayoutRes(): Int {
