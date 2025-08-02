@@ -311,8 +311,6 @@ buildscript {
     implementation(platform(libs.firebase.bom))
     implementation(libs.mlkit.text.recognition.v2)
 
-
-
     // OkHttp
     implementation(libs.okhttp)
 

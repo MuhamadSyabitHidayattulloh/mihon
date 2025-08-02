@@ -10,7 +10,6 @@ voyager = "1.1.0-beta03"
 spotless = "7.2.1"
 ktlint-core = "1.7.1"
 firebase-bom = "34.0.0"
-mlkit-text-recognition-v2 = "18.0.0"
 markdown = "0.35.0"
 junit = "5.13.4"
 
@@ -126,6 +125,16 @@ sqldelight = ["sqldelight-android-driver", "sqldelight-coroutines", "sqldelight-
 voyager = ["voyager-navigator", "voyager-screenmodel", "voyager-tab-navigator", "voyager-transitions"]
 test = ["junit-jupiter", "kotest-assertions", "mockk"]
 markdown = ["markdown-core", "markdown-coil"]
+
+
+
+
+
+
+
+
+
+
 
 
 mlkit-text-recognition-v2 = { module = "com.google.mlkit:text-recognition-v2", version.ref = "mlkit-text-recognition-v2" }
