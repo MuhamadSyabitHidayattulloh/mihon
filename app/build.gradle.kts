@@ -308,8 +308,8 @@ buildscript {
 
 
     // ML Kit Text Recognition v2
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.mlkit:text-recognition-v2:18.0.0"))
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.mlkit.text.recognition.v2)
 
 
 
