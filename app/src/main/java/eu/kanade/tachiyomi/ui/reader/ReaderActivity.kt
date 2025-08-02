@@ -393,6 +393,7 @@ class ReaderActivity : BaseActivity() {
                 onOpenInWebView = ::openChapterInWebView.takeIf { isHttpSource },
                 onOpenInBrowser = ::openChapterInBrowser.takeIf { isHttpSource },
                 onShare = ::shareChapter.takeIf { isHttpSource },
+                onTranslate = ::translatePage,
 
                 viewer = state.viewer,
                 onNextChapter = ::loadNextChapter,
@@ -965,3 +966,65 @@ class ReaderActivity : BaseActivity() {
         }
     }
 }
+
+
+
+    fun getPageBitmap(): Bitmap? {
+        return viewModel.state.value.viewer?.getCurrentPage()?.getImage()?.render()
+    }
+
+
+
+
+
+    private val textRecognitionManager = TextRecognitionManager()
+    private val googleTranslateManager = GoogleTranslateManager()
+
+    private fun translatePage() {
+        val bitmap = getPageBitmap()
+        if (bitmap == null) {
+            toast("Tidak dapat mengambil gambar halaman.")
+            return
+        }
+
+        lifecycleScope.launchIO {
+            withUIContext {
+                binding.dialogRoot.setComposeContent {
+                    AlertDialog(
+                        onDismissRequest = { /* Do nothing */ },
+                        title = { Text("Menerjemahkan...") },
+                        text = { Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator()
+                            Text("Sedang menerjemahkan halaman...")
+                        } },
+                        confirmButton = {},
+                    )
+                }
+            }
+
+            textRecognitionManager.recognizeText(bitmap) {
+                if (it.isNotBlank()) {
+                    lifecycleScope.launchIO {
+                        val translatedText = googleTranslateManager.translateText(it)
+                        withUIContext {
+                            binding.dialogRoot.setComposeContent {
+                                AlertDialog(
+                                    onDismissRequest = { binding.dialogRoot.setComposeContent { } },
+                                    title = { Text("Hasil Terjemahan") },
+                                    text = { Text(translatedText) },
+                                    confirmButton = { Text("OK", modifier = Modifier.clickable { binding.dialogRoot.setComposeContent { } }) },
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    withUIContext {
+                        toast("Tidak ada teks yang terdeteksi.")
+                        binding.dialogRoot.setComposeContent { }
+                    }
+                }
+            }
+        }
+    }
+
+

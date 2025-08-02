@@ -305,3 +305,19 @@ buildscript {
         classpath(kotlinx.gradle)
     }
 }
+
+
+    // ML Kit Text Recognition v2
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.mlkit:text-recognition-v2:18.0.0"))
+
+
+
+    // OkHttp
+    implementation(libs.okhttp)
+
+    // Kotlin Coroutines
+    implementation(kotlinx.coroutines.core)
+    implementation(kotlinx.coroutines.android)
+
+
