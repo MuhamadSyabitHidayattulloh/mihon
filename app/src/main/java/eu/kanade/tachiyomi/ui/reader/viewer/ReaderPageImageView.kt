@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.viewer
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Animatable
@@ -120,20 +119,6 @@ open class ReaderPageImageView @JvmOverloads constructor(
                     },
                 )
             }
-        }
-    }
-
-    fun getVisibleBitmap(): Bitmap? {
-        return (pageView as? SubsamplingScaleImageView)?.let {
-            val bitmap = (it.drawable as? BitmapDrawable)?.bitmap
-            val visibleRect = it.visibleRect
-            Bitmap.createBitmap(
-                bitmap,
-                visibleRect.left,
-                visibleRect.top,
-                visibleRect.width(),
-                visibleRect.height(),
-            )
         }
     }
 
