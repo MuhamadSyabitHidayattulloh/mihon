@@ -40,6 +40,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.view.isVisibleOnScreen
 import okio.BufferedSource
+import android.graphics.Bitmap
 import tachiyomi.core.common.util.system.ImageUtil
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -118,6 +119,14 @@ open class ReaderPageImageView @JvmOverloads constructor(
                         }
                     },
                 )
+        }
+    }
+
+    fun getVisibleBitmap(): Bitmap? {
+        return (pageView as? SubsamplingScaleImageView)?.let {
+            val bitmap = (it.drawable as? BitmapDrawable)?.bitmap
+            val visibleRect = it.visibleRect
+            Bitmap.createBitmap(bitmap, visibleRect.left, visibleRect.top, visibleRect.width(), visibleRect.height())
             }
         }
     }

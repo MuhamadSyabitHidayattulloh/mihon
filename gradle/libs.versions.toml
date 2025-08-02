@@ -108,6 +108,8 @@ markdown-coil = { module = "com.mikepenz:multiplatform-markdown-renderer-coil3",
 
 stringSimilarity = { module = "com.aallam.similarity:string-similarity-kotlin", version = "0.1.0" }
 
+mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "mlkit-text-recognition" }
+
 [plugins]
 google-services = { id = "com.google.gms.google-services", version = "4.4.3" }
 aboutLibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutlib_version" }

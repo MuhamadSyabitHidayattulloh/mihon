@@ -75,6 +75,11 @@ import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.source.local.isLocal
+import android.graphics.Bitmap
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.defaults.TextRecognizerOptions
+import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
@@ -896,6 +901,26 @@ class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
+    fun translatePage(getBitmap: () -> Bitmap?) {
+        val bitmap = getBitmap()
+        if (bitmap == null) {
+            logcat { "Bitmap is null, can't translate" }
+            return
+        }
+
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val image = InputImage.fromBitmap(bitmap, 0)
+        recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                viewModelScope.launch {
+                    eventChannel.send(Event.ShowTranslatedText(visionText.text))
+                }
+            }
+            .addOnFailureListener { e ->
+                logcat(LogPriority.ERROR, e) { "Text recognition failed" }
+            }
+    }
+
     enum class SetAsCoverResult {
         Success,
         AddToLibraryFirst,
@@ -986,5 +1011,6 @@ class ReaderViewModel @JvmOverloads constructor(
         data class SavedImage(val result: SaveImageResult) : Event
         data class ShareImage(val uri: Uri, val page: ReaderPage) : Event
         data class CopyImage(val uri: Uri) : Event
+        data class ShowTranslatedText(val text: String) : Event
     }
 }

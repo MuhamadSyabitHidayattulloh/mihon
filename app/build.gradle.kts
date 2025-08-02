@@ -281,6 +281,8 @@ dependencies {
     // String similarity
     implementation(libs.stringSimilarity)
 
+    implementation(libs.mlkit.text.recognition)
+
     // Tests
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
