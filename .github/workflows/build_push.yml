@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches:
-      - feature/translation
+      - main
     tags:
       - v*
 

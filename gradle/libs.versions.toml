@@ -1,4 +1,5 @@
 [versions]
+mlkit-text-recognition = "19.0.0"
 aboutlib_version = "12.2.4"
 leakcanary = "2.14"
 moko = "0.25.0"
