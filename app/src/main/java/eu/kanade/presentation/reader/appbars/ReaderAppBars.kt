@@ -48,7 +48,6 @@ fun ReaderAppBars(
     onOpenInWebView: (() -> Unit)?,
     onOpenInBrowser: (() -> Unit)?,
     onShare: (() -> Unit)?,
-    onClickTranslate: (() -> Unit)?,
 
     viewer: Viewer?,
     onNextChapter: () -> Unit,
@@ -141,14 +140,6 @@ fun ReaderAppBars(
                                     add(
                                         AppBar.OverflowAction(
                                             title = stringResource(MR.strings.action_share),
-                                            onClick = it,
-                                        ),
-                                    )
-                                }
-                                onClickTranslate?.let {
-                                    add(
-                                        AppBar.OverflowAction(
-                                            title = "Translate",
                                             onClick = it,
                                         ),
                                     )

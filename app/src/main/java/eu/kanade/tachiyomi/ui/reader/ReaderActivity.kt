@@ -37,7 +37,6 @@ import androidx.core.transition.doOnEnd
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.material.elevation.SurfaceColors
@@ -73,8 +72,6 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
-import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerPageHolder
-import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerViewer
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
 import eu.kanade.tachiyomi.util.system.isNightMode
@@ -103,7 +100,6 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.ByteArrayOutputStream
-import java.net.URLEncoder
 
 class ReaderActivity : BaseActivity() {
 
@@ -236,14 +232,6 @@ class ReaderActivity : BaseActivity() {
                     }
                     is ReaderViewModel.Event.SetCoverResult -> {
                         onSetAsCoverResult(event.result)
-                    }
-                    is ReaderViewModel.Event.ShowTranslatedText -> {
-                        val encodedText = URLEncoder.encode(event.text, "UTF-8")
-                        val intent = WebViewActivity.newIntent(
-                            this@ReaderActivity,
-                            "https://translate.google.com/?sl=auto&tl=en&text=$encodedText",
-                        )
-                        startActivity(intent)
                     }
                 }
             }
@@ -405,18 +393,6 @@ class ReaderActivity : BaseActivity() {
                 onOpenInWebView = ::openChapterInWebView.takeIf { isHttpSource },
                 onOpenInBrowser = ::openChapterInBrowser.takeIf { isHttpSource },
                 onShare = ::shareChapter.takeIf { isHttpSource },
-                onClickTranslate = {
-                    val viewer = viewModel.state.value.viewer as? PagerViewer ?: return@ReaderAppBars
-                    val holder = viewer.pager.children
-                        .filterIsInstance<PagerPageHolder>()
-                        .firstOrNull {
-                            it.item ==
-                                viewModel.state.value.currentChapter?.pages?.getOrNull(
-                                    viewModel.state.value.currentPage - 1,
-                                )
-                        }
-                    viewModel.translatePage { holder?.getVisibleBitmap() }
-                },
 
                 viewer = state.viewer,
                 onNextChapter = ::loadNextChapter,

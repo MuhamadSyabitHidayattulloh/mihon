@@ -1,16 +1,12 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.app.Application
-import android.graphics.Bitmap
 import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.defaults.TextRecognizerOptions
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.chapter.model.toDbChapter
 import eu.kanade.domain.manga.interactor.SetMangaViewerFlags
@@ -900,26 +896,6 @@ class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
-    fun translatePage(getBitmap: () -> Bitmap?) {
-        val bitmap = getBitmap()
-        if (bitmap == null) {
-            logcat { "Bitmap is null, can't translate" }
-            return
-        }
-
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-        val image = InputImage.fromBitmap(bitmap, 0)
-        recognizer.process(image)
-            .addOnSuccessListener { visionText ->
-                viewModelScope.launch {
-                    eventChannel.send(Event.ShowTranslatedText(visionText.text))
-                }
-            }
-            .addOnFailureListener { e ->
-                logcat(LogPriority.ERROR, e) { "Text recognition failed" }
-            }
-    }
-
     enum class SetAsCoverResult {
         Success,
         AddToLibraryFirst,
@@ -1010,6 +986,5 @@ class ReaderViewModel @JvmOverloads constructor(
         data class SavedImage(val result: SaveImageResult) : Event
         data class ShareImage(val uri: Uri, val page: ReaderPage) : Event
         data class CopyImage(val uri: Uri) : Event
-        data class ShowTranslatedText(val text: String) : Event
     }
 }

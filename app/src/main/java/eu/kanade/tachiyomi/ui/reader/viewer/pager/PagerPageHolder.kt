@@ -2,12 +2,8 @@ package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Rect
 import android.view.LayoutInflater
 import androidx.core.view.isVisible
-import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.databinding.ReaderErrorBinding
 import eu.kanade.tachiyomi.source.model.Page
@@ -155,17 +151,14 @@ class PagerPageHolder(
 
         try {
             val (source, isAnimated, background) = withIOContext {
-                val bufferedSource = streamFn().use { process(item, Buffer().readFrom(it)) }
-                // Decode the bitmap here and store it in the page
-                val bitmap = BitmapFactory.decodeStream(bufferedSource.peek().inputStream())
-                page.bitmap = bitmap
-                val isAnimated = ImageUtil.isAnimatedAndSupported(bufferedSource)
+                val source = streamFn().use { process(item, Buffer().readFrom(it)) }
+                val isAnimated = ImageUtil.isAnimatedAndSupported(source)
                 val background = if (!isAnimated && viewer.config.automaticBackground) {
-                    ImageUtil.chooseBackground(context, bufferedSource.peek().inputStream())
+                    ImageUtil.chooseBackground(context, source.peek().inputStream())
                 } else {
                     null
                 }
-                Triple(bufferedSource, isAnimated, background)
+                Triple(source, isAnimated, background)
             }
             withUIContext {
                 setImage(
@@ -314,18 +307,5 @@ class PagerPageHolder(
     private fun removeErrorLayout() {
         errorLayout?.root?.isVisible = false
         errorLayout = null
-    }
-
-    fun getVisibleBitmap(): Bitmap? {
-        val bitmap = page.bitmap ?: return null
-        val ssiv = findView(SubsamplingScaleImageView::class.java) ?: return null
-        val visibleRect = ssiv.visibleFileRect ?: return null
-        return Bitmap.createBitmap(
-            bitmap,
-            visibleRect.left.toInt(),
-            visibleRect.top.toInt(),
-            visibleRect.width().toInt(),
-            visibleRect.height().toInt(),
-        )
     }
 }
