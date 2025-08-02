@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.widget.ViewPagerAdapter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.collectLatest
+import android.graphics.BitmapFactory
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
@@ -24,6 +25,9 @@ import okio.BufferedSource
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
+import android.graphics.Bitmap
+import android.graphics.Rect
+import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
@@ -151,14 +155,17 @@ class PagerPageHolder(
 
         try {
             val (source, isAnimated, background) = withIOContext {
-                val source = streamFn().use { process(item, Buffer().readFrom(it)) }
-                val isAnimated = ImageUtil.isAnimatedAndSupported(source)
+                val bufferedSource = streamFn().use { process(item, Buffer().readFrom(it)) }
+                // Decode the bitmap here and store it in the page
+                val bitmap = BitmapFactory.decodeStream(bufferedSource.peek().inputStream())
+                page.bitmap = bitmap
+                val isAnimated = ImageUtil.isAnimatedAndSupported(bufferedSource)
                 val background = if (!isAnimated && viewer.config.automaticBackground) {
-                    ImageUtil.chooseBackground(context, source.peek().inputStream())
+                    ImageUtil.chooseBackground(context, bufferedSource.peek().inputStream())
                 } else {
                     null
                 }
-                Triple(source, isAnimated, background)
+                Triple(bufferedSource, isAnimated, background)
             }
             withUIContext {
                 setImage(
@@ -307,5 +314,12 @@ class PagerPageHolder(
     private fun removeErrorLayout() {
         errorLayout?.root?.isVisible = false
         errorLayout = null
+    }
+
+    fun getVisibleBitmap(): Bitmap? {
+        val bitmap = page.bitmap ?: return null
+        val ssiv = findView(SubsamplingScaleImageView::class.java) ?: return null
+        val visibleRect = ssiv.visibleFileRect ?: return null
+        return Bitmap.createBitmap(bitmap, visibleRect.left.toInt(), visibleRect.top.toInt(), visibleRect.width().toInt(), visibleRect.height().toInt())
     }
 }
