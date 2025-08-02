@@ -1,8 +1,8 @@
-name: CI
+main: CI
 on:
   push:
     branches:
-      - main
+      - feature/translation
     tags:
       - v*
 
