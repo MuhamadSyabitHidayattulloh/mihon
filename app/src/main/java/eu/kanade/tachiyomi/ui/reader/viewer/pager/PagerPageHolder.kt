@@ -2,6 +2,9 @@ package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Rect
 import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import eu.kanade.presentation.util.formattedMessage
@@ -16,7 +19,6 @@ import eu.kanade.tachiyomi.widget.ViewPagerAdapter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.collectLatest
-import android.graphics.BitmapFactory
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
@@ -25,8 +27,6 @@ import okio.BufferedSource
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
-import android.graphics.Bitmap
-import android.graphics.Rect
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
@@ -319,6 +319,12 @@ class PagerPageHolder(
         val bitmap = page.bitmap ?: return null
         val ssiv = findView(SubsamplingScaleImageView::class.java) ?: return null
         val visibleRect = ssiv.visibleFileRect ?: return null
-        return Bitmap.createBitmap(bitmap, visibleRect.left.toInt(), visibleRect.top.toInt(), visibleRect.width().toInt(), visibleRect.height().toInt())
+        return Bitmap.createBitmap(
+            bitmap,
+            visibleRect.left.toInt(),
+            visibleRect.top.toInt(),
+            visibleRect.width().toInt(),
+            visibleRect.height().toInt(),
+        )
     }
 }

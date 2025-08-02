@@ -37,6 +37,7 @@ import androidx.core.transition.doOnEnd
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.material.elevation.SurfaceColors
@@ -50,7 +51,6 @@ import eu.kanade.presentation.reader.OrientationSelectDialog
 import eu.kanade.presentation.reader.PageIndicatorText
 import eu.kanade.presentation.reader.ReaderContentOverlay
 import eu.kanade.presentation.reader.ReaderPageActionsDialog
-import androidx.core.view.children
 import eu.kanade.presentation.reader.ReadingModeSelectDialog
 import eu.kanade.presentation.reader.appbars.ReaderAppBars
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
@@ -76,7 +76,6 @@ import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerPageHolder
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerViewer
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
-import java.net.URLEncoder
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
 import eu.kanade.tachiyomi.util.system.isNightMode
 import eu.kanade.tachiyomi.util.system.openInBrowser
@@ -104,6 +103,7 @@ import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.ByteArrayOutputStream
+import java.net.URLEncoder
 
 class ReaderActivity : BaseActivity() {
 
@@ -239,7 +239,10 @@ class ReaderActivity : BaseActivity() {
                     }
                     is ReaderViewModel.Event.ShowTranslatedText -> {
                         val encodedText = URLEncoder.encode(event.text, "UTF-8")
-                        val intent = WebViewActivity.newIntent(this@ReaderActivity, "https://translate.google.com/?sl=auto&tl=en&text=$encodedText")
+                        val intent = WebViewActivity.newIntent(
+                            this@ReaderActivity,
+                            "https://translate.google.com/?sl=auto&tl=en&text=$encodedText",
+                        )
                         startActivity(intent)
                     }
                 }
@@ -406,7 +409,12 @@ class ReaderActivity : BaseActivity() {
                     val viewer = viewModel.state.value.viewer as? PagerViewer ?: return@ReaderAppBars
                     val holder = viewer.pager.children
                         .filterIsInstance<PagerPageHolder>()
-                        .firstOrNull { it.item == viewModel.state.value.currentChapter?.pages?.getOrNull(viewModel.state.value.currentPage - 1) }
+                        .firstOrNull {
+                            it.item ==
+                                viewModel.state.value.currentChapter?.pages?.getOrNull(
+                                    viewModel.state.value.currentPage - 1,
+                                )
+                        }
                     viewModel.translatePage { holder?.getVisibleBitmap() }
                 },
 

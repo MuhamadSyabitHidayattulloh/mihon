@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader.viewer
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Animatable
@@ -40,7 +41,6 @@ import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonSubsamplingImageView
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.view.isVisibleOnScreen
 import okio.BufferedSource
-import android.graphics.Bitmap
 import tachiyomi.core.common.util.system.ImageUtil
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -119,6 +119,7 @@ open class ReaderPageImageView @JvmOverloads constructor(
                         }
                     },
                 )
+            }
         }
     }
 
@@ -126,8 +127,13 @@ open class ReaderPageImageView @JvmOverloads constructor(
         return (pageView as? SubsamplingScaleImageView)?.let {
             val bitmap = (it.drawable as? BitmapDrawable)?.bitmap
             val visibleRect = it.visibleRect
-            Bitmap.createBitmap(bitmap, visibleRect.left, visibleRect.top, visibleRect.width(), visibleRect.height())
-            }
+            Bitmap.createBitmap(
+                bitmap,
+                visibleRect.left,
+                visibleRect.top,
+                visibleRect.width(),
+                visibleRect.height(),
+            )
         }
     }
 
