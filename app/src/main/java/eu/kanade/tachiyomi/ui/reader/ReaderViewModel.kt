@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.reader
 
 import android.app.Application
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
@@ -22,6 +23,7 @@ import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.saver.Image
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.saver.Location
+import eu.kanade.tachiyomi.data.translation.TranslatorManager
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.reader.loader.ChapterLoader
@@ -49,11 +51,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
 import tachiyomi.core.common.preference.toggle
@@ -90,6 +94,7 @@ class ReaderViewModel @JvmOverloads constructor(
     private val downloadProvider: DownloadProvider = Injekt.get(),
     private val imageSaver: ImageSaver = Injekt.get(),
     val readerPreferences: ReaderPreferences = Injekt.get(),
+    private val translatorManager: TranslatorManager = Injekt.get(),
     private val basePreferences: BasePreferences = Injekt.get(),
     private val downloadPreferences: DownloadPreferences = Injekt.get(),
     private val trackPreferences: TrackPreferences = Injekt.get(),
@@ -441,6 +446,13 @@ class ReaderViewModel @JvmOverloads constructor(
         }
 
         val selectedChapter = page.chapter
+
+        viewModelScope.launch {
+            if (readerPreferences.translationEnabled().get()) {
+                translatePage(page)
+            }
+        }
+
         val pages = selectedChapter.pages ?: return
 
         // Save last page read and mark as read if needed
@@ -943,6 +955,25 @@ class ReaderViewModel @JvmOverloads constructor(
     private fun deletePendingChapters() {
         viewModelScope.launchNonCancellable {
             downloadManager.deletePendingChapters()
+        }
+    }
+
+    private suspend fun translatePage(page: ReaderPage) {
+        if (page.status != Page.State.Ready) return
+        val bitmap = page.stream?.invoke()?.let { BitmapFactory.decodeStream(it) } ?: return
+        val targetLanguage = readerPreferences.targetLanguage().get()
+
+        val textBlocks = translatorManager.detectText(bitmap).firstOrNull() ?: return
+        val translatedTexts = textBlocks.map {
+            translatorManager.translate(it.text, "auto", targetLanguage).firstOrNull() ?: it.text
+        }
+
+        val newBitmap = translatorManager.drawTranslatedText(bitmap, textBlocks, translatedTexts)
+        page.stream = {
+            java.io.ByteArrayOutputStream().run {
+                newBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 100, this)
+                java.io.ByteArrayInputStream(this.toByteArray())
+            }
         }
     }
 

@@ -12,8 +12,10 @@ ktlint-core = "1.7.1"
 firebase-bom = "34.0.0"
 markdown = "0.35.0"
 junit = "5.13.4"
+mlkitTextRecognition = "19.0.0"
 
 [libraries]
+googleMlkitTextRecognition = { group = "com.google.android.gms", name = "play-services-mlkit-text-recognition", version.ref = "mlkitTextRecognition" }
 desugar = "com.android.tools:desugar_jdk_libs:2.1.5"
 android-shortcut-gradle = "com.github.zellius:android-shortcut-gradle-plugin:0.1.2"
 
