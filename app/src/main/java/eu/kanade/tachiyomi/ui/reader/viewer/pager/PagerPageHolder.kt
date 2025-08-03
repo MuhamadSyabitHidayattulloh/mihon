@@ -47,7 +47,7 @@ class PagerPageHolder(
     override val item
         get() = page
 
-    internal var pageView: View? = null
+    internal var pageView: FrameLayout? = null
 
     /**
      * Loading progress bar to indicate the current progress.

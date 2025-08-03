@@ -198,12 +198,12 @@ open class ReaderPageImageView @JvmOverloads constructor(
     /**
      * Check if the image can be panned to the left
      */
-    fun canPanLeft(): Boolean = canPan { it.left }
+    open fun canPanLeft(): Boolean = canPan { it.left }
 
     /**
      * Check if the image can be panned to the right
      */
-    fun canPanRight(): Boolean = canPan { it.right }
+    open fun canPanRight(): Boolean = canPan { it.right }
 
     /**
      * Check whether the image can be panned.
@@ -222,14 +222,14 @@ open class ReaderPageImageView @JvmOverloads constructor(
     /**
      * Pans the image to the left by a screen's width worth.
      */
-    fun panLeft() {
+    open fun panLeft() {
         pan { center, view -> center.also { it.x -= view.width / view.scale } }
     }
 
     /**
      * Pans the image to the right by a screen's width worth.
      */
-    fun panRight() {
+    open fun panRight() {
         pan { center, view -> center.also { it.x += view.width / view.scale } }
     }
 
