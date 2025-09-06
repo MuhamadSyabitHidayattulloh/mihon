@@ -1,11 +1,14 @@
 package eu.kanade.presentation.manga.components
 
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
@@ -17,6 +20,8 @@ import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.FileDownloadOff
 import androidx.compose.material.icons.outlined.RemoveDone
+import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +38,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.data.download.model.Download
@@ -41,8 +49,10 @@ import me.saket.swipe.SwipeableActionsBox
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
+import tachiyomi.presentation.core.components.material.IconButtonTokens
 import tachiyomi.presentation.core.components.material.SECONDARY_ALPHA
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.secondaryItemAlpha
 import tachiyomi.presentation.core.util.selectedBackground
 
 @Composable
@@ -55,6 +65,7 @@ fun MangaChapterListItem(
     bookmark: Boolean,
     selected: Boolean,
     downloadIndicatorEnabled: Boolean,
+    translationIndicatorEnabled: Boolean,
     downloadStateProvider: () -> Download.State,
     downloadProgressProvider: () -> Int,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
@@ -62,6 +73,7 @@ fun MangaChapterListItem(
     onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
+    onTranslateClick: () -> Unit,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -171,6 +183,13 @@ fun MangaChapterListItem(
                 }
             }
 
+            if (translationIndicatorEnabled) {
+                TranslateIndicator(
+                    enabled = true,
+                    modifier = Modifier.padding(start = 4.dp),
+                    onClick = onTranslateClick,
+                )
+            }
             ChapterDownloadIndicator(
                 enabled = downloadIndicatorEnabled,
                 modifier = Modifier.padding(start = 4.dp),
@@ -179,6 +198,42 @@ fun MangaChapterListItem(
                 onClick = { onDownloadClick?.invoke(it) },
             )
         }
+    }
+}
+
+@Composable
+private fun TranslateIndicator(
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val haptic = LocalHapticFeedback.current
+    Box(
+        modifier = modifier
+            .size(IconButtonTokens.StateLayerSize)
+            .combinedClickable(
+                enabled = enabled,
+                onLongClick = {
+                    onClick()
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                },
+                onClick = onClick,
+                role = Role.Button,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(
+                    bounded = false,
+                    radius = IconButtonTokens.StateLayerSize / 2,
+                ),
+            )
+            .secondaryItemAlpha(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Translate,
+            contentDescription = stringResource(MR.strings.label_translation),
+            modifier = Modifier.size(26.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

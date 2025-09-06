@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
@@ -40,6 +41,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.AppBarActions
+import eu.kanade.presentation.more.settings.screen.SettingsTranslationScreen
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
@@ -195,6 +197,12 @@ object SettingsMainScreen : Screen() {
             subtitleRes = MR.strings.pref_downloads_summary,
             icon = Icons.Outlined.GetApp,
             screen = SettingsDownloadScreen,
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_translation,
+            subtitleRes = MR.strings.pref_translation_summary,
+            icon = Icons.Outlined.Translate,
+            screen = SettingsTranslationScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_tracking,
