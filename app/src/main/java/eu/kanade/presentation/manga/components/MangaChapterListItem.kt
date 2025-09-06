@@ -62,6 +62,7 @@ fun MangaChapterListItem(
     onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
+    onTranslateClick: (() -> Unit)?,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -170,6 +171,11 @@ fun MangaChapterListItem(
                     }
                 }
             }
+
+            ChapterTranslationIndicator(
+                enabled = true, // For now, always enabled
+                onClick = { onTranslateClick?.invoke() },
+            )
 
             ChapterDownloadIndicator(
                 enabled = downloadIndicatorEnabled,

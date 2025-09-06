@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogWindowProvider
 import eu.kanade.presentation.components.TabbedDialog
 import eu.kanade.presentation.components.TabbedDialogPaddings
+import eu.kanade.presentation.reader.settings.TranslationPage
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
@@ -29,6 +30,7 @@ fun ReaderSettingsDialog(
     val tabTitles = persistentListOf(
         stringResource(MR.strings.pref_category_reading_mode),
         stringResource(MR.strings.pref_category_general),
+        stringResource(MR.strings.label_translation),
         stringResource(MR.strings.custom_filter),
     )
     val pagerState = rememberPagerState { tabTitles.size }
@@ -63,7 +65,8 @@ fun ReaderSettingsDialog(
                 when (page) {
                     0 -> ReadingModePage(screenModel)
                     1 -> GeneralPage(screenModel)
-                    2 -> ColorFilterPage(screenModel)
+                    2 -> TranslationPage()
+                    3 -> ColorFilterPage(screenModel)
                 }
             }
         }

@@ -809,6 +809,7 @@ private fun LazyListScope.sharedChapterItems(
                     } else {
                         null
                     },
+                    onTranslateClick = { /* TODO */ },
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
                     },
