@@ -14,7 +14,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -25,11 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.domain.translation.service.TranslationPreferences
+import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
@@ -40,7 +39,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.Screen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import eu.kanade.presentation.more.settings.PreferenceScaffold
 
 object SettingsTranslationScreen : Screen() {
 
@@ -83,7 +81,10 @@ object SettingsTranslationScreen : Screen() {
                             "ja" to stringResource(MR.strings.language_japanese),
                             "ko" to stringResource(MR.strings.language_korean),
                         ),
-                        onValueChanged = { prefs.translateFrom().set(it); true },
+                        onValueChanged = {
+                            prefs.translateFrom().set(it)
+                            true
+                        },
                     )
                 }
 
@@ -96,7 +97,10 @@ object SettingsTranslationScreen : Screen() {
                             "en" to stringResource(MR.strings.language_english),
                             "id" to stringResource(MR.strings.language_indonesian),
                         ),
-                        onValueChanged = { prefs.translateTo().set(it); true },
+                        onValueChanged = {
+                            prefs.translateTo().set(it)
+                            true
+                        },
                     )
                 }
 
@@ -121,7 +125,10 @@ object SettingsTranslationScreen : Screen() {
                             "mlkit" to stringResource(MR.strings.model_ml_kit),
                             "bing" to stringResource(MR.strings.model_bing_translate),
                         ),
-                        onValueChanged = { prefs.translationModel().set(it); true },
+                        onValueChanged = {
+                            prefs.translationModel().set(it)
+                            true
+                        },
                     )
                 }
 
@@ -164,7 +171,10 @@ object SettingsTranslationScreen : Screen() {
                             "serif" to stringResource(MR.strings.font_serif),
                             "monospace" to stringResource(MR.strings.font_monospace),
                         ),
-                        onValueChanged = { prefs.fontFamily().set(it); true },
+                        onValueChanged = {
+                            prefs.fontFamily().set(it)
+                            true
+                        },
                     )
                 }
 
@@ -242,7 +252,7 @@ object SettingsTranslationScreen : Screen() {
         fontSize: Float,
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Text(
                 text = stringResource(MR.strings.pref_preview_box),
