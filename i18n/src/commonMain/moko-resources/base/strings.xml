@@ -211,8 +211,44 @@
     <string name="pref_category_tracking">Tracking</string>
     <string name="pref_category_advanced">Advanced</string>
     <string name="pref_category_about">About</string>
+    <string name="pref_category_translation">Translation</string>
 
     <string name="pref_appearance_summary">Theme, date &amp; time format</string>
+    <string name="pref_translation_summary">Translation settings</string>
+
+    <!-- Translation settings -->
+    <string name="pref_auto_translate_after_download">Auto Translation After Download</string>
+    <string name="pref_translate_from">Translate From</string>
+    <string name="language_latin">Latin</string>
+    <string name="language_chinese_simplified">Chinese Simplified</string>
+    <string name="language_chinese_traditional">Chinese Traditional</string>
+    <string name="language_japanese">Japanese</string>
+    <string name="language_korean">Korean</string>
+    <string name="pref_translate_to">Translate To</string>
+    <string name="language_english">English</string>
+    <string name="language_indonesian">Indonesian</string>
+    <string name="action_add_language">+ Add Language</string>
+    <string name="language_name">Language Name</string>
+    <string name="language_code">Language Code</string>
+    <string name="pref_translation_model">Translation Model</string>
+    <string name="model_google_translate">Google Translate</string>
+    <string name="model_ml_kit">ML Kit (offline)</string>
+    <string name="model_bing_translate">Bing Translate</string>
+    <string name="pref_category_appearance_settings">Appearance Settings</string>
+    <string name="pref_background_color">Background Color</string>
+    <string name="pref_font_family">Font Family</string>
+    <string name="font_sans">Sans</string>
+    <string name="font_serif">Serif</string>
+    <string name="font_monospace">Monospace</string>
+    <string name="pref_font_size">Font Size</string>
+    <string name="pref_preview_box">Preview Box</string>
+    <string name="pref_show_translation">Show Translation</string>
+    <string name="pref_offset_x">Offset X</string>
+    <string name="pref_offset_y">Offset Y</string>
+    <string name="pref_offset_z">Offset Z</string>
+    <string name="label_translation">Translation</string>
+    <string name="label_download_translation">Download Translation</string>
+
     <string name="pref_library_summary">Categories, global update, chapter swipe</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_downloads_summary">Automatic download, download ahead</string>
