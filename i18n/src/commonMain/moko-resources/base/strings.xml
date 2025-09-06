@@ -212,9 +212,18 @@
     <string name="pref_category_advanced">Advanced</string>
     <string name="pref_category_about">About</string>
 
+    <!-- Translation section -->
+    <string name="pref_category_translation">Translation</string>
+    <string name="pref_auto_translate_on_download">Auto translate after download</string>
+    <string name="pref_translation_configuration">Translation Configuration</string>
+    <string name="pref_translate_from">Translate from</string>
+    <string name="pref_translate_to">Translate to</string>
+    <string name="pref_translation_model">Translation model</string>
+
     <string name="pref_appearance_summary">Theme, date &amp; time format</string>
     <string name="pref_library_summary">Categories, global update, chapter swipe</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
+    <string name="pref_translation_summary">Auto-translate, language, model</string>
     <string name="pref_downloads_summary">Automatic download, download ahead</string>
     <string name="pref_tracking_summary">One-way progress sync, enhanced sync</string>
     <string name="pref_browse_summary">Sources, extensions, global search</string>
