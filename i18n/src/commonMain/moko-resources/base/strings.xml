@@ -1040,4 +1040,24 @@
     <string name="migrationListScreen.migrateDialog.cancelLabel">Cancel</string>
     <string name="migrationListScreen.progressDialog.cancelLabel">Cancel</string>
     <string name="migrationListScreen.matchWithoutChapterToast">No chapters found, this entry cannot be used for migration</string>
+
+    <!-- Translation strings -->
+    <string name="label_translation">Translation</string>
+    <string name="pref_translation_settings">Translation settings</string>
+    <string name="pref_auto_translate_on_download">Auto translate after download</string>
+    <string name="pref_translate_from">Translate from</string>
+    <string name="pref_translate_to">Translate to</string>
+    <string name="pref_add_language">+ Add Language</string>
+    <string name="language_name">Language Name</string>
+    <string name="language_code">Language Code</string>
+    <string name="pref_translation_model">Translation Model</string>
+    <string name="pref_appearance_settings">Appearance Settings</string>
+    <string name="pref_background_color">Background Color</string>
+    <string name="pref_font_family">Font Family</string>
+    <string name="pref_font_size">Font Size</string>
+    <string name="pref_show_translation">Show Translation</string>
+    <string name="pref_offset_x">Offset X</string>
+    <string name="pref_offset_y">Offset Y</string>
+    <string name="pref_offset_z">Offset Z</string>
+    <string name="label_download_translation">Download translation</string>
 </resources>
