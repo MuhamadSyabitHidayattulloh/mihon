@@ -1,4 +1,6 @@
 [versions]
+mlkit_version = "17.0.3"
+mlkit_text_recognition_version = "16.0.1"
 aboutlib_version = "12.2.4"
 leakcanary = "2.14"
 moko = "0.25.1"
@@ -72,6 +74,12 @@ moko-core = { module = "dev.icerock.moko:resources", version.ref = "moko" }
 
 logcat = "com.squareup.logcat:logcat:0.4"
 
+mlkit-translate = { module = "com.google.mlkit:translate", version.ref = "mlkit_version" }
+mlkit-text-recognition = { module = "com.google.mlkit:text-recognition", version.ref = "mlkit_text_recognition_version" }
+mlkit-text-recognition-chinese = { module = "com.google.mlkit:text-recognition-chinese", version.ref = "mlkit_text_recognition_version" }
+mlkit-text-recognition-japanese = { module = "com.google.mlkit:text-recognition-japanese", version.ref = "mlkit_text_recognition_version" }
+mlkit-text-recognition-korean = { module = "com.google.mlkit:text-recognition-korean", version.ref = "mlkit_text_recognition_version" }
+
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
@@ -115,6 +123,7 @@ moko = { id = "dev.icerock.mobile.multiplatform-resources", version.ref = "moko"
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.6" }
 
 [bundles]
+mlkit = ["mlkit-translate", "mlkit-text-recognition", "mlkit-text-recognition-chinese", "mlkit-text-recognition-japanese", "mlkit-text-recognition-korean"]
 okhttp = ["okhttp-core", "okhttp-logging", "okhttp-brotli", "okhttp-dnsoverhttps"]
 js-engine = ["quickjs-android"]
 sqlite = ["sqlite-framework", "sqlite-ktx", "sqlite-android"]

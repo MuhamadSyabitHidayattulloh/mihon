@@ -1,14 +1,15 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
+import eu.kanade.tachiyomi.data.translation.TranslationManager
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 
 /**
  * Implementation of a left to right PagerViewer.
  */
-class L2RPagerViewer(activity: ReaderActivity) : PagerViewer(activity) {
+class L2RPagerViewer(activity: ReaderActivity, translationManager: TranslationManager) : PagerViewer(activity, translationManager) {
     /**
      * Creates a new left to right pager.
-     */
+     *//
     override fun createPager(): Pager {
         return Pager(activity)
     }
@@ -17,7 +18,7 @@ class L2RPagerViewer(activity: ReaderActivity) : PagerViewer(activity) {
 /**
  * Implementation of a right to left PagerViewer.
  */
-class R2LPagerViewer(activity: ReaderActivity) : PagerViewer(activity) {
+class R2LPagerViewer(activity: ReaderActivity, translationManager: TranslationManager) : PagerViewer(activity, translationManager) {
     /**
      * Creates a new right to left pager.
      */
@@ -43,7 +44,7 @@ class R2LPagerViewer(activity: ReaderActivity) : PagerViewer(activity) {
 /**
  * Implementation of a vertical (top to bottom) PagerViewer.
  */
-class VerticalPagerViewer(activity: ReaderActivity) : PagerViewer(activity) {
+class VerticalPagerViewer(activity: ReaderActivity, translationManager: TranslationManager) : PagerViewer(activity, translationManager) {
     /**
      * Creates a new vertical pager.
      */

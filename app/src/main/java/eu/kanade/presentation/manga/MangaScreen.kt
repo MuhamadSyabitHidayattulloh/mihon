@@ -61,6 +61,7 @@ import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
+import eu.kanade.tachiyomi.data.translation.model.Translation
 import eu.kanade.tachiyomi.ui.manga.MangaScreenModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.domain.chapter.model.Chapter
@@ -790,6 +791,7 @@ private fun LazyListScope.sharedChapterItems(
                     downloadIndicatorEnabled = !isAnyChapterSelected && !manga.isLocal(),
                     downloadStateProvider = { item.downloadState },
                     downloadProgressProvider = { item.downloadProgress },
+                    translationStateProvider = { Translation.State.NOT_TRANSLATED },
                     chapterSwipeStartAction = chapterSwipeStartAction,
                     chapterSwipeEndAction = chapterSwipeEndAction,
                     onLongClick = {
@@ -809,6 +811,7 @@ private fun LazyListScope.sharedChapterItems(
                     } else {
                         null
                     },
+                    onTranslateClick = { /* TODO */ },
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
                     },
