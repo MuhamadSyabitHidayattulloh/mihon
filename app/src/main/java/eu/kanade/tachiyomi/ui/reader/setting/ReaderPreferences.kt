@@ -77,6 +77,8 @@ class ReaderPreferences(
 
     fun webtoonDisableZoomOut() = preferenceStore.getBoolean("webtoon_disable_zoom_out", false)
 
+    fun showTranslations() = preferenceStore.getBoolean("show_translations", false)
+
     // endregion
 
     // region Split two page spread

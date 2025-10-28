@@ -194,6 +194,14 @@ class LibraryPreferences(
 
     fun disallowNonAsciiFilenames() = preferenceStore.getBoolean("disallow_non_ascii_filenames", false)
 
+    fun translateOnDownload() = preferenceStore.getBoolean("translate_on_download", false)
+
+    fun translateFrom() = preferenceStore.getString("translate_from", "en")
+
+    fun translateTo() = preferenceStore.getString("translate_to", "en")
+
+    fun translateEngine() = preferenceStore.getString("translate_engine", "ml-kit")
+
     // endregion
 
     enum class ChapterSwipeAction {

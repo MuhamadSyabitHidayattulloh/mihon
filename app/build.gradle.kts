@@ -275,6 +275,9 @@ dependencies {
     // Logging
     implementation(libs.logcat)
 
+    // ML Kit
+    implementation(libs.bundles.mlkit)
+
     // Shizuku
     implementation(libs.bundles.shizuku)
 

@@ -1,14 +1,26 @@
+
 package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.RectF
 import android.view.LayoutInflater
 import androidx.core.view.isVisible
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import eu.kanade.presentation.util.formattedMessage
+import eu.kanade.tachiyomi.data.translation.TranslationManager
 import eu.kanade.tachiyomi.databinding.ReaderErrorBinding
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
@@ -28,6 +40,8 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 /**
  * View of the ViewPager that contains a page of a chapter.
@@ -37,6 +51,7 @@ class PagerPageHolder(
     readerThemedContext: Context,
     val viewer: PagerViewer,
     val page: ReaderPage,
+    private val translationManager: TranslationManager,
 ) : ReaderPageImageView(readerThemedContext), ViewPagerAdapter.PositionableView {
 
     /**
@@ -56,6 +71,8 @@ class PagerPageHolder(
     private var errorLayout: ReaderErrorBinding? = null
 
     private val scope = MainScope()
+
+    private val readerPreferences: ReaderPreferences = Injekt.get()
 
     /**
      * Job for loading the page and processing changes to the page's status.
@@ -161,17 +178,21 @@ class PagerPageHolder(
                 Triple(source, isAnimated, background)
             }
             withUIContext {
-                setImage(
-                    source,
-                    isAnimated,
-                    Config(
-                        zoomDuration = viewer.config.doubleTapAnimDuration,
-                        minimumScaleType = viewer.config.imageScaleType,
-                        cropBorders = viewer.config.imageCropBorders,
-                        zoomStartPosition = viewer.config.imageZoomType,
-                        landscapeZoom = viewer.config.landscapeZoom,
-                    ),
-                )
+                if (readerPreferences.showTranslations().get()) {
+                    translateAndSetImage(source, isAnimated, background)
+                } else {
+                    setImage(
+                        source,
+                        isAnimated,
+                        Config(
+                            zoomDuration = viewer.config.doubleTapAnimDuration,
+                            minimumScaleType = viewer.config.imageScaleType,
+                            cropBorders = viewer.config.imageCropBorders,
+                            zoomStartPosition = viewer.config.imageZoomType,
+                            landscapeZoom = viewer.config.landscapeZoom,
+                        ),
+                    )
+                }
                 if (!isAnimated) {
                     pageBackground = background
                 }
@@ -183,6 +204,55 @@ class PagerPageHolder(
                 setError(e)
             }
         }
+    }
+
+    private fun translateAndSetImage(source: BufferedSource, isAnimated: Boolean, background: Int?) {
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val bitmap = BitmapFactory.decodeStream(source.peek().inputStream())
+        val image = InputImage.fromBitmap(bitmap, 0)
+        recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                val translatedText = mutableListOf<Pair<String, Rect>>()
+                val textBlocks = visionText.textBlocks
+                for (i in textBlocks.indices) {
+                    val block = textBlocks[i]
+                    translationManager.translate(
+                        block.text,
+                        readerPreferences.translateFrom().get(),
+                        readerPreferences.translateTo().get(),
+                    ) { translatedString ->
+                        translatedText.add(translatedString to block.boundingBox!!)
+                        if (translatedText.size == textBlocks.size) {
+                            val mutableBitmap = bitmap.copy(bitmap.config, true)
+                            val canvas = Canvas(mutableBitmap)
+                            val paint = Paint()
+                            paint.color = Color.WHITE
+                            paint.style = Paint.Style.FILL
+                            val textPaint = Paint()
+                            textPaint.color = Color.BLACK
+                            textPaint.textSize = 20f
+                            for ((text, boundingBox) in translatedText) {
+                                canvas.drawRect(RectF(boundingBox), paint)
+                                canvas.drawText(text, boundingBox.left.toFloat(), boundingBox.bottom.toFloat(), textPaint)
+                            }
+                            setImage(
+                                mutableBitmap,
+                                isAnimated,
+                                Config(
+                                    zoomDuration = viewer.config.doubleTapAnimDuration,
+                                    minimumScaleType = viewer.config.imageScaleType,
+                                    cropBorders = viewer.config.imageCropBorders,
+                                    zoomStartPosition = viewer.config.imageZoomType,
+                                    landscapeZoom = viewer.config.landscapeZoom,
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                logcat(LogPriority.ERROR, e) { "Failed to recognize text" }
+            }
     }
 
     private fun process(page: ReaderPage, imageSource: BufferedSource): BufferedSource {
