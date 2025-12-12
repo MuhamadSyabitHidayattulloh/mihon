@@ -83,7 +83,6 @@ class DownloadManager(
      */
     fun pauseDownloads() {
         downloader.pause()
-        downloader.stop()
     }
 
     /**
