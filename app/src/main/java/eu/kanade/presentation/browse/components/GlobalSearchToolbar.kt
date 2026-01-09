@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DoneAll
 import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -45,6 +46,8 @@ fun GlobalSearchToolbar(
     onChangeSearchFilter: (SourceFilter) -> Unit,
     onlyShowHasResults: Boolean,
     onToggleResults: () -> Unit,
+    selectedLanguages: Set<String>,
+    onLanguageFilterClick: () -> Unit,
     scrollBehavior: TopAppBarScrollBehavior,
 ) {
     Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
@@ -122,6 +125,22 @@ fun GlobalSearchToolbar(
                 },
                 label = {
                     Text(text = stringResource(MR.strings.has_results))
+                },
+            )
+
+            FilterChip(
+                selected = selectedLanguages.isNotEmpty(),
+                onClick = onLanguageFilterClick,
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Public,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(FilterChipDefaults.IconSize),
+                    )
+                },
+                label = {
+                    Text(text = stringResource(MR.strings.action_display_language_badge))
                 },
             )
         }

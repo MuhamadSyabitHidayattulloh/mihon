@@ -4,9 +4,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.browse.components.GlobalSearchCardRow
 import eu.kanade.presentation.browse.components.GlobalSearchErrorResultItem
+import eu.kanade.presentation.browse.components.GlobalSearchLanguageFilterDialog
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchToolbar
@@ -30,7 +35,11 @@ fun GlobalSearchScreen(
     onClickSource: (CatalogueSource) -> Unit,
     onClickItem: (Manga) -> Unit,
     onLongClickItem: (Manga) -> Unit,
+    availableLanguages: List<String>,
+    onSetSelectedLanguages: (Set<String>) -> Unit,
 ) {
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = { scrollBehavior ->
             GlobalSearchToolbar(
@@ -45,6 +54,8 @@ fun GlobalSearchScreen(
                 onChangeSearchFilter = onChangeSearchFilter,
                 onlyShowHasResults = state.onlyShowHasResults,
                 onToggleResults = onToggleResults,
+                selectedLanguages = state.selectedLanguages,
+                onLanguageFilterClick = { showLanguageDialog = true },
                 scrollBehavior = scrollBehavior,
             )
         },
@@ -57,6 +68,17 @@ fun GlobalSearchScreen(
             onClickItem = onClickItem,
             onLongClickItem = onLongClickItem,
         )
+
+        if (showLanguageDialog) {
+            GlobalSearchLanguageFilterDialog(
+                availableLanguages = availableLanguages,
+                selectedLanguages = state.selectedLanguages,
+                onDismissRequest = { showLanguageDialog = false },
+                onConfirm = { languages ->
+                    onSetSelectedLanguages(languages)
+                },
+            )
+        }
     }
 }
 

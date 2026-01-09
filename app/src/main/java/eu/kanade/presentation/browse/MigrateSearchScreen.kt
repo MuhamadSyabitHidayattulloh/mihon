@@ -37,6 +37,8 @@ fun MigrateSearchScreen(
                 onChangeSearchFilter = onChangeSearchFilter,
                 onlyShowHasResults = state.onlyShowHasResults,
                 onToggleResults = onToggleResults,
+                selectedLanguages = state.selectedLanguages,
+                onLanguageFilterClick = { },
                 scrollBehavior = scrollBehavior,
             )
         },

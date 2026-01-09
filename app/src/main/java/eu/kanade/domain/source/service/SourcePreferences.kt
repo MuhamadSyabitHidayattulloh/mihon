@@ -58,6 +58,11 @@ class SourcePreferences(
         false,
     )
 
+    fun globalSearchLanguages() = preferenceStore.getStringSet(
+        Preference.appStateKey("global_search_languages"),
+        emptySet(),
+    )
+
     fun migrationSources() = preferenceStore.getLongArray("migration_sources", emptyList())
 
     fun migrationFlags() = preferenceStore.getObjectFromInt(

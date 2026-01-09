@@ -9,6 +9,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.ioCoroutineScope
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.CatalogueSource
+import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentMapOf
@@ -70,6 +71,15 @@ abstract class SearchScreenModel(
                 mutableState.update { it.copy(onlyShowHasResults = state) }
             }
         }
+        screenModelScope.launch {
+            preferences.globalSearchLanguages().changes().collectLatest { languages ->
+                mutableState.update { it.copy(selectedLanguages = languages) }
+            }
+        }
+        val initialLanguages = preferences.globalSearchLanguages().get()
+        if (initialLanguages.isNotEmpty()) {
+            mutableState.update { it.copy(selectedLanguages = initialLanguages) }
+        }
     }
 
     @Composable
@@ -98,15 +108,22 @@ abstract class SearchScreenModel(
         val enabledSources = getEnabledSources()
 
         val filter = extensionFilter
-        if (filter.isNullOrEmpty()) {
-            return enabledSources
+        val sources = if (filter.isNullOrEmpty()) {
+            enabledSources
+        } else {
+            extensionManager.installedExtensionsFlow.value
+                .filter { it.pkgName == filter }
+                .flatMap { it.sources }
+                .filterIsInstance<CatalogueSource>()
+                .filter { it in enabledSources }
         }
 
-        return extensionManager.installedExtensionsFlow.value
-            .filter { it.pkgName == filter }
-            .flatMap { it.sources }
-            .filterIsInstance<CatalogueSource>()
-            .filter { it in enabledSources }
+        val selectedLanguages = state.value.selectedLanguages
+        return if (selectedLanguages.isNotEmpty()) {
+            sources.filter { it.lang in selectedLanguages }
+        } else {
+            sources
+        }
     }
 
     fun updateSearchQuery(query: String?) {
@@ -120,6 +137,17 @@ abstract class SearchScreenModel(
 
     fun toggleFilterResults() {
         preferences.globalSearchFilterState().toggle()
+    }
+
+    fun setSelectedLanguages(languages: Set<String>) {
+        preferences.globalSearchLanguages().set(languages)
+    }
+
+    fun getAvailableLanguages(): List<String> {
+        return getEnabledSources()
+            .map { it.lang }
+            .distinct()
+            .sortedWith(LocaleHelper.comparator)
     }
 
     fun search() {
@@ -219,12 +247,17 @@ abstract class SearchScreenModel(
         val searchQuery: String? = null,
         val sourceFilter: SourceFilter = SourceFilter.PinnedOnly,
         val onlyShowHasResults: Boolean = false,
+        val selectedLanguages: Set<String> = emptySet(),
         val items: PersistentMap<CatalogueSource, SearchItemResult> = persistentMapOf(),
         val dialog: Dialog? = null,
     ) {
         val progress: Int = items.count { it.value !is SearchItemResult.Loading }
         val total: Int = items.size
-        val filteredItems = items.filter { (_, result) -> result.isVisible(onlyShowHasResults) }
+        val filteredItems = items
+            .filter { (source, _) ->
+                selectedLanguages.isEmpty() || source.lang in selectedLanguages
+            }
+            .filter { (_, result) -> result.isVisible(onlyShowHasResults) }
     }
 
     sealed interface Dialog {
