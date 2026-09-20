@@ -11,6 +11,9 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
+import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
+import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -25,21 +28,31 @@ class ImageRedrawProcessor(
 ) {
 
     suspend fun processAndRedraw(inputBitmap: Bitmap): Bitmap = withContext(Dispatchers.IO) {
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         val image = InputImage.fromBitmap(inputBitmap, 0)
 
-        val visionText = try {
-            suspendCancellableCoroutine { continuation ->
-                recognizer.process(image)
-                    .addOnSuccessListener { text ->
-                        continuation.resume(text)
+        // Run Japanese, Chinese, Korean, and Default/Latin recognizers to capture all comic text scripts
+        val recognizers = listOf(
+            TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build()),
+            TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build()),
+            TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build()),
+            TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS),
+        )
+
+        val textBlocks = mutableListOf<com.google.mlkit.vision.text.Text.TextBlock>()
+
+        try {
+            for (recognizer in recognizers) {
+                try {
+                    val visionText = suspendCancellableCoroutine { continuation ->
+                        recognizer.process(image)
+                            .addOnSuccessListener { text -> continuation.resume(text) }
+                            .addOnFailureListener { e -> continuation.resumeWithException(e) }
                     }
-                    .addOnFailureListener { e ->
-                        continuation.resumeWithException(e)
-                    }
+                    textBlocks.addAll(visionText.textBlocks)
+                } catch (_: Exception) {}
             }
         } finally {
-            recognizer.close()
+            recognizers.forEach { it.close() }
         }
 
         val resultBitmap = inputBitmap.copy(Bitmap.Config.ARGB_8888, true)
@@ -53,7 +66,7 @@ class ImageRedrawProcessor(
             else -> Typeface.create("sans-serif", Typeface.BOLD)
         }
 
-        for (block in visionText.textBlocks) {
+        for (block in textBlocks) {
             val box = block.boundingBox ?: continue
             val originalText = block.text
             if (originalText.isBlank()) continue

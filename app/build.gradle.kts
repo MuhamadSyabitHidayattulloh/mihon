@@ -314,6 +314,9 @@ dependencies {
     implementation(libs.materialKolor)
 
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.mlkit.text.recognition.japanese)
+    implementation(libs.mlkit.text.recognition.chinese)
+    implementation(libs.mlkit.text.recognition.korean)
     implementation(libs.mlkit.language.id)
     implementation(libs.mlkit.translate)
 
