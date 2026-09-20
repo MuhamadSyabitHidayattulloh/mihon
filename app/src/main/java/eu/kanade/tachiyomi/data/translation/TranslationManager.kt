@@ -72,15 +72,22 @@ class TranslationManager(
         return files.isNotEmpty()
     }
 
-    suspend fun translateChapter(source: Source, manga: Manga, chapter: Chapter): Boolean = withContext(Dispatchers.IO) {
+    suspend fun translateChapter(source: Source, manga: Manga, chapter: Chapter): Boolean = withContext(
+        Dispatchers.IO,
+    ) {
         val chapterId = chapter.id
         _runningJobs.value = _runningJobs.value + chapterId
         try {
-            val downloadDir = downloadProvider.findChapterDir(chapter.name, chapter.scanlator, chapter.url, manga.title, source)
-                ?: return@withContext false
+            val downloadDir =
+                downloadProvider.findChapterDir(chapter.name, chapter.scanlator, chapter.url, manga.title, source)
+                    ?: return@withContext false
 
             val imageFiles = downloadDir.listFiles()?.filter { file ->
-                file.isFile && (file.name?.endsWith(".jpg", true) == true || file.name?.endsWith(".png", true) == true || file.name?.endsWith(".webp", true) == true)
+                file.isFile &&
+                    (
+                        file.name?.endsWith(".jpg", true) == true || file.name?.endsWith(".png", true) == true ||
+                            file.name?.endsWith(".webp", true) == true
+                        )
             }?.sortedBy { it.name } ?: return@withContext false
 
             if (imageFiles.isEmpty()) return@withContext false

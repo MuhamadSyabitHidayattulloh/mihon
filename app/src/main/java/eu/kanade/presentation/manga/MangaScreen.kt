@@ -810,7 +810,9 @@ private fun LazyListScope.sharedChapterItems(
                             eu.kanade.tachiyomi.data.translation.TranslationJob.KEY_MANGA_ID to manga.id,
                             eu.kanade.tachiyomi.data.translation.TranslationJob.KEY_CHAPTER_ID to item.chapter.id,
                         )
-                        val request = androidx.work.OneTimeWorkRequestBuilder<eu.kanade.tachiyomi.data.translation.TranslationJob>()
+                        val request = androidx.work.OneTimeWorkRequestBuilder<
+                            eu.kanade.tachiyomi.data.translation.TranslationJob,
+                            >()
                             .setInputData(inputData)
                             .build()
                         workManager.enqueue(request)

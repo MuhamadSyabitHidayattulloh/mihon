@@ -89,7 +89,8 @@ class ImageRedrawProcessor(
             canvas.drawRect(box, erasePaint)
 
             // Determine text color for high contrast against background
-            val luminance = (0.299 * Color.red(bgColor) + 0.587 * Color.green(bgColor) + 0.114 * Color.blue(bgColor)) / 255
+            val luminance =
+                (0.299 * Color.red(bgColor) + 0.587 * Color.green(bgColor) + 0.114 * Color.blue(bgColor)) / 255
             val textColor = if (luminance > 0.5) Color.BLACK else Color.WHITE
 
             val textPaint = TextPaint().apply {

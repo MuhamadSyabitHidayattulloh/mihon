@@ -68,7 +68,11 @@ internal class DownloadPageLoader(
         if (showTranslation && translationManager != null) {
             val transDir = translationManager.findTranslationChapterDir(source, manga, domainChapter)
             val files = transDir?.listFiles()?.filter {
-                it.isFile && (it.name?.endsWith(".jpg", true) == true || it.name?.endsWith(".png", true) == true || it.name?.endsWith(".webp", true) == true)
+                it.isFile &&
+                    (
+                        it.name?.endsWith(".jpg", true) == true || it.name?.endsWith(".png", true) == true ||
+                            it.name?.endsWith(".webp", true) == true
+                        )
             }?.sortedBy { it.name }
 
             if (!files.isNullOrEmpty()) {

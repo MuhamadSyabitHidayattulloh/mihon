@@ -1,5 +1,9 @@
 package eu.kanade.tachiyomi.data.translation.engine
 
+import com.google.mlkit.nl.languageid.LanguageIdentification
+import com.google.mlkit.nl.translate.TranslateLanguage
+import com.google.mlkit.nl.translate.Translation
+import com.google.mlkit.nl.translate.TranslatorOptions
 import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -14,10 +18,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import com.google.mlkit.nl.languageid.LanguageIdentification
-import com.google.mlkit.nl.translate.Translation
-import com.google.mlkit.nl.translate.TranslatorOptions
-import com.google.mlkit.nl.translate.TranslateLanguage
 import tachiyomi.domain.translation.service.TranslationPreferences
 import java.net.URLEncoder
 import kotlin.coroutines.resume
@@ -86,7 +86,8 @@ class TranslationEngineManager(
 
     private fun translateGoogleWeb(text: String, sourceLang: String, targetLang: String): String {
         val encodedText = URLEncoder.encode(text, "UTF-8")
-        val url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=$sourceLang&tl=$targetLang&dt=t&q=$encodedText"
+        val url = "https://translate.googleapis.com/translate_a/single" +
+            "?client=gtx&sl=$sourceLang&tl=$targetLang&dt=t&q=$encodedText"
         val request = Request.Builder().url(url).build()
         val response = networkHelper.client.newCall(request).execute()
         val bodyStr = response.body.string()
@@ -116,15 +117,25 @@ class TranslationEngineManager(
 
         val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
         val payload = buildJsonObject {
-            put("contents", buildJsonArray {
-                add(buildJsonObject {
-                    put("parts", buildJsonArray {
-                        add(buildJsonObject {
-                            put("text", prompt)
-                        })
-                    })
-                })
-            })
+            put(
+                "contents",
+                buildJsonArray {
+                    add(
+                        buildJsonObject {
+                            put(
+                                "parts",
+                                buildJsonArray {
+                                    add(
+                                        buildJsonObject {
+                                            put("text", prompt)
+                                        },
+                                    )
+                                },
+                            )
+                        },
+                    )
+                },
+            )
         }.toString()
 
         val request = Request.Builder()
@@ -150,12 +161,17 @@ class TranslationEngineManager(
         val url = "https://openrouter.ai/api/v1/chat/completions"
         val payload = buildJsonObject {
             put("model", model)
-            put("messages", buildJsonArray {
-                add(buildJsonObject {
-                    put("role", "user")
-                    put("content", prompt)
-                })
-            })
+            put(
+                "messages",
+                buildJsonArray {
+                    add(
+                        buildJsonObject {
+                            put("role", "user")
+                            put("content", prompt)
+                        },
+                    )
+                },
+            )
         }.toString()
 
         val request = Request.Builder()
