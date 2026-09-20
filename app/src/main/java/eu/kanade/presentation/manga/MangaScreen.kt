@@ -752,6 +752,7 @@ private fun LazyListScope.sharedChapterItems(
         },
         contentType = { MangaScreenItem.CHAPTER },
     ) { item ->
+        val context = LocalContext.current
         val haptic = LocalHapticFeedback.current
 
         when (item) {
@@ -804,7 +805,6 @@ private fun LazyListScope.sharedChapterItems(
                         null
                     },
                     onTranslateClick = {
-                        val appGraph = context.applicationContext as? mihon.app.di.AppGraphProvider
                         val workManager = androidx.work.WorkManager.getInstance(context)
                         val inputData = androidx.work.workDataOf(
                             eu.kanade.tachiyomi.data.translation.TranslationJob.KEY_MANGA_ID to manga.id,
