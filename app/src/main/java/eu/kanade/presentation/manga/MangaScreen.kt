@@ -28,6 +28,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -76,6 +77,7 @@ import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.shouldExpandFAB
 import tachiyomi.source.local.isLocal
 import kotlin.time.Instant
@@ -810,9 +812,10 @@ private fun LazyListScope.sharedChapterItems(
                     } else {
                         null
                     },
-                    translationState = remember(item.chapter.id) {
+                    translationState = run {
                         val translationManager = context.appGraph.translationManager
-                        val isRunning = translationManager.runningJobs.value.contains(item.chapter.id)
+                        val runningJobs by translationManager.runningJobs.collectAsState()
+                        val isRunning = runningJobs.contains(item.chapter.id)
                         val isTranslated = translationManager.isChapterTranslated(source, manga, item.chapter)
                         when {
                             isRunning -> ChapterTranslationState.TRANSLATING
