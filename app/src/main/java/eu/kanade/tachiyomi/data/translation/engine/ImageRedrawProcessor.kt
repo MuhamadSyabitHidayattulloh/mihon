@@ -29,37 +29,51 @@ class ImageRedrawProcessor(
     private val preferences: TranslationPreferences,
 ) {
 
+    private val paddleEngine = PaddleOcrEngine(context)
+
     suspend fun processAndRedraw(inputBitmap: Bitmap): Bitmap = withContext(Dispatchers.IO) {
-        val image = InputImage.fromBitmap(inputBitmap, 0)
-
-        // Run Japanese, Chinese, Korean, and Default/Latin recognizers to capture all comic text scripts
-        val recognizers = listOf(
-            TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build()),
-            TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build()),
-            TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build()),
-            TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS),
-        )
-
-        val textBlocks = mutableListOf<com.google.mlkit.vision.text.Text.TextBlock>()
+        val rawOcrBlocks = mutableListOf<OcrResultBlock>()
 
         try {
-            for (recognizer in recognizers) {
-                try {
-                    val visionText = suspendCancellableCoroutine { continuation ->
-                        recognizer.process(image)
-                            .addOnSuccessListener { text -> continuation.resume(text) }
-                            .addOnFailureListener { e -> continuation.resumeWithException(e) }
-                    }
-                    textBlocks.addAll(visionText.textBlocks)
-                } catch (_: Exception) {}
+            rawOcrBlocks.addAll(paddleEngine.processImage(inputBitmap))
+        } catch (_: Exception) {}
+
+        if (rawOcrBlocks.isEmpty()) {
+            val image = InputImage.fromBitmap(inputBitmap, 0)
+            val recognizers = listOf(
+                TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build()),
+                TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build()),
+                TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build()),
+                TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS),
+            )
+
+            try {
+                for (recognizer in recognizers) {
+                    try {
+                        val visionText = suspendCancellableCoroutine { continuation ->
+                            recognizer.process(image)
+                                .addOnSuccessListener { text -> continuation.resume(text) }
+                                .addOnFailureListener { e -> continuation.resumeWithException(e) }
+                        }
+                        for (block in visionText.textBlocks) {
+                            val box = block.boundingBox ?: continue
+                            if (block.text.isNotBlank()) {
+                                rawOcrBlocks.add(OcrResultBlock(box, block.text))
+                            }
+                        }
+                    } catch (_: Exception) {}
+                }
+            } finally {
+                recognizers.forEach { it.close() }
             }
-        } finally {
-            recognizers.forEach { it.close() }
         }
+
+        val sortedBlocks = sortMangaReadingOrder(rawOcrBlocks)
 
         val resultBitmap = inputBitmap.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(resultBitmap)
 
+        val sourceLang = preferences.sourceLanguage.get()
         val targetLang = preferences.targetLanguage.get()
         val fontName = preferences.fontSelection.get()
         val typeface = try {
@@ -73,12 +87,12 @@ class ImageRedrawProcessor(
             Typeface.create("sans-serif", Typeface.BOLD)
         }
 
-        for (block in textBlocks) {
-            val box = block.boundingBox ?: continue
+        for (block in sortedBlocks) {
+            val box = block.box
             val originalText = block.text
             if (originalText.isBlank()) continue
 
-            val detectedLang = engineManager.detectLanguage(originalText)
+            val detectedLang = if (sourceLang.isNotBlank()) sourceLang else engineManager.detectLanguage(originalText)
             val translatedText = try {
                 engineManager.translate(originalText, detectedLang, targetLang)
             } catch (e: Exception) {
@@ -86,7 +100,7 @@ class ImageRedrawProcessor(
             }
 
             // Calculate dominant background color by edge sampling around the text box
-            val bgColor = sampleEdgeColor(resultBitmap, box)
+            val bgColor = sampleTextEdgeColor(resultBitmap, box)
 
             // Dynamic Inpainting: Fill original text box with sampled dynamic background color
             val erasePaint = Paint().apply {
@@ -106,14 +120,26 @@ class ImageRedrawProcessor(
                 this.isAntiAlias = true
             }
 
-            // Draw translated text with automatic text-scaling to fit box
-            drawTextToFitBox(canvas, translatedText, box, textPaint)
+            drawTextToFitBubble(canvas, translatedText, box, textPaint)
         }
 
         resultBitmap
     }
 
-    private fun sampleEdgeColor(bitmap: Bitmap, box: Rect): Int {
+    private fun sortMangaReadingOrder(blocks: List<OcrResultBlock>): List<OcrResultBlock> {
+        return blocks.sortedWith(
+            Comparator { b1, b2 ->
+                val yDiff = Math.abs(b1.box.top - b2.box.top)
+                if (yDiff < 40) {
+                    b2.box.right.compareTo(b1.box.right)
+                } else {
+                    b1.box.top.compareTo(b2.box.top)
+                }
+            },
+        )
+    }
+
+    private fun sampleTextEdgeColor(bitmap: Bitmap, box: Rect): Int {
         var rSum = 0L
         var gSum = 0L
         var bSum = 0L
@@ -160,7 +186,7 @@ class ImageRedrawProcessor(
         }
     }
 
-    private fun drawTextToFitBox(canvas: Canvas, text: String, box: Rect, textPaint: TextPaint) {
+    private fun drawTextToFitBubble(canvas: Canvas, text: String, box: Rect, textPaint: TextPaint) {
         val width = box.width().coerceAtLeast(1)
         val height = box.height().coerceAtLeast(1)
 

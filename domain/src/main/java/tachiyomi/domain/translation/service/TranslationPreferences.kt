@@ -16,6 +16,11 @@ class TranslationPreferences(
         false,
     )
 
+    val sourceLanguage: Preference<String> = preferenceStore.getString(
+        "pref_translation_source_language_key",
+        "ja",
+    )
+
     val targetLanguage: Preference<String> = preferenceStore.getString(
         "pref_translation_target_language_key",
         "id",

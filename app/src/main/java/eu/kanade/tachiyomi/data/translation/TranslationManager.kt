@@ -18,15 +18,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
-import mihon.core.archive.archiveReader
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.translation.service.TranslationPreferences
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileOutputStream
+import java.io.BufferedInputStream
+import java.util.zip.ZipInputStream
 
 @Inject
 @SingleIn(AppScope::class)
@@ -84,44 +82,100 @@ class TranslationManager(
                 downloadProvider.findChapterDir(chapter.name, chapter.scanlator, chapter.url, manga.title, source)
                     ?: return@withContext false
 
-            val imageFiles = downloadDir.listFiles()?.filter { file ->
-                file.isFile &&
-                    (
-                        file.name?.endsWith(".jpg", true) == true || file.name?.endsWith(".png", true) == true ||
-                            file.name?.endsWith(".webp", true) == true
-                        )
-            }?.sortedBy { it.name } ?: return@withContext false
-
-            if (imageFiles.isEmpty()) return@withContext false
-
             val targetChapterDir = getTranslationChapterDir(source, manga, chapter) ?: return@withContext false
 
-            for (imgFile in imageFiles) {
-                val inputStream = imgFile.openInputStream()
-                val originalBitmap = BitmapFactory.decodeStream(inputStream)
-                inputStream.close()
+            val cbzFile = if (downloadDir.isFile && downloadDir.name?.endsWith(".cbz", true) == true) {
+                downloadDir
+            } else if (downloadDir.isDirectory) {
+                downloadDir.listFiles()?.firstOrNull { it.isFile && it.name?.endsWith(".cbz", true) == true }
+            } else {
+                null
+            }
 
-                if (originalBitmap != null) {
-                    var redrawnBitmap: Bitmap? = null
-                    try {
-                        redrawnBitmap = redrawProcessor.processAndRedraw(originalBitmap)
-                        val targetFile = targetChapterDir.createFile(imgFile.name ?: "page.jpg") ?: continue
-                        val outputStream = targetFile.openOutputStream()
-                        redrawnBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
-                        outputStream.flush()
-                        outputStream.close()
-                    } finally {
-                        if (redrawnBitmap != null && !redrawnBitmap.isRecycled) {
-                            redrawnBitmap.recycle()
+            if (cbzFile != null) {
+                val zis = ZipInputStream(BufferedInputStream(cbzFile.openInputStream()))
+                zis.use { zipStream ->
+                    var entry = zipStream.nextEntry
+                    while (entry != null) {
+                        val name = entry.name.substringAfterLast('/')
+                        if (!entry.isDirectory && (
+                                name.endsWith(".jpg", true) ||
+                                    name.endsWith(".jpeg", true) ||
+                                    name.endsWith(".png", true) ||
+                                    name.endsWith(".webp", true)
+                                )
+                        ) {
+                            val bytes = zipStream.readBytes()
+                            val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            if (originalBitmap != null) {
+                                var redrawnBitmap: Bitmap? = null
+                                try {
+                                    redrawnBitmap = redrawProcessor.processAndRedraw(originalBitmap)
+                                    val targetFile = targetChapterDir.createFile(name) ?: continue
+                                    val outputStream = targetFile.openOutputStream()
+                                    redrawnBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                                    outputStream.flush()
+                                    outputStream.close()
+                                } finally {
+                                    if (redrawnBitmap != null && !redrawnBitmap.isRecycled) {
+                                        redrawnBitmap.recycle()
+                                    }
+                                    if (!originalBitmap.isRecycled) {
+                                        originalBitmap.recycle()
+                                    }
+                                }
+                            }
                         }
-                        if (!originalBitmap.isRecycled) {
-                            originalBitmap.recycle()
+                        zipStream.closeEntry()
+                        entry = zipStream.nextEntry
+                    }
+                }
+                return@withContext true
+            }
+
+            if (downloadDir.isDirectory) {
+                val imageFiles = downloadDir.listFiles()?.filter { file ->
+                    file.isFile &&
+                        (
+                            file.name?.endsWith(".jpg", true) == true ||
+                                file.name?.endsWith(".jpeg", true) == true ||
+                                file.name?.endsWith(".png", true) == true ||
+                                file.name?.endsWith(".webp", true) == true
+                            )
+                }?.sortedBy { it.name } ?: return@withContext false
+
+                if (imageFiles.isEmpty()) return@withContext false
+
+                for (imgFile in imageFiles) {
+                    val inputStream = imgFile.openInputStream()
+                    val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                    inputStream.close()
+
+                    if (originalBitmap != null) {
+                        var redrawnBitmap: Bitmap? = null
+                        try {
+                            redrawnBitmap = redrawProcessor.processAndRedraw(originalBitmap)
+                            val targetFile = targetChapterDir.createFile(imgFile.name ?: "page.jpg") ?: continue
+                            val outputStream = targetFile.openOutputStream()
+                            redrawnBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                            outputStream.flush()
+                            outputStream.close()
+                        } finally {
+                            if (redrawnBitmap != null && !redrawnBitmap.isRecycled) {
+                                redrawnBitmap.recycle()
+                            }
+                            if (!originalBitmap.isRecycled) {
+                                originalBitmap.recycle()
+                            }
                         }
                     }
                 }
+                return@withContext true
             }
-            true
+
+            false
         } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to translate chapter" }
             false
         } finally {
             _runningJobs.value = _runningJobs.value - chapterId
