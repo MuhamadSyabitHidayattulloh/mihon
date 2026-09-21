@@ -61,6 +61,7 @@ import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
@@ -758,15 +759,17 @@ private fun LazyListScope.sharedChapterItems(
         val haptic = LocalHapticFeedback.current
         val context = LocalContext.current
         val translationManager = context.appGraph.translationManager
+        val scope = androidx.compose.runtime.rememberCoroutineScope()
 
         when (item) {
             is ChapterList.MissingCount -> {
                 MissingChapterCountListItem(count = item.count)
             }
             is ChapterList.Item -> {
-                val translationProgress by translationManager.getProgressFlow(
-                    item.chapter.id,
-                ).collectAsState()
+                val translationProgress:
+                    eu.kanade.tachiyomi.data.translation.TranslationProgress by translationManager.getProgressFlow(
+                        item.chapter.id,
+                    ).collectAsState()
 
                 MangaChapterListItem(
                     title = if (manga.displayMode == Manga.CHAPTER_DISPLAY_NUMBER) {
@@ -833,10 +836,10 @@ private fun LazyListScope.sharedChapterItems(
                                 workManager.enqueue(request)
                             }
                             ChapterTranslationAction.DELETE -> {
-                                val downloadProvider = context.appGraph.downloadManager.provider
-                                val sourceManager = context.appGraph.sourceManager
-                                val source = sourceManager.getOrStub(manga.source)
-                                if (source != null) {
+                                scope.launch {
+                                    val downloadProvider = context.appGraph.downloadManager.provider
+                                    val sourceManager = context.appGraph.sourceManager
+                                    val source = sourceManager.getOrStub(manga.source)
                                     val chapterDir = downloadProvider.findChapterDir(
                                         item.chapter.name,
                                         item.chapter.scanlator,
