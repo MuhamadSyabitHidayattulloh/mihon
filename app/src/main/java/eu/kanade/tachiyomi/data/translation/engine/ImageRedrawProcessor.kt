@@ -6,22 +6,14 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
-import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
-import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import tachiyomi.domain.translation.service.TranslationPreferences
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class ImageRedrawProcessor(
     private val context: Context,
@@ -32,42 +24,8 @@ class ImageRedrawProcessor(
     private val paddleEngine = PaddleOcrEngine(context)
 
     suspend fun processAndRedraw(inputBitmap: Bitmap): Bitmap = withContext(Dispatchers.IO) {
-        val rawOcrBlocks = mutableListOf<OcrResultBlock>()
-
-        try {
-            rawOcrBlocks.addAll(paddleEngine.processImage(inputBitmap))
-        } catch (_: Exception) {}
-
-        if (rawOcrBlocks.isEmpty()) {
-            val image = InputImage.fromBitmap(inputBitmap, 0)
-            val recognizers = listOf(
-                TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build()),
-                TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build()),
-                TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build()),
-                TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS),
-            )
-
-            try {
-                for (recognizer in recognizers) {
-                    try {
-                        val visionText = suspendCancellableCoroutine { continuation ->
-                            recognizer.process(image)
-                                .addOnSuccessListener { text -> continuation.resume(text) }
-                                .addOnFailureListener { e -> continuation.resumeWithException(e) }
-                        }
-                        for (block in visionText.textBlocks) {
-                            val box = block.boundingBox ?: continue
-                            if (block.text.isNotBlank()) {
-                                rawOcrBlocks.add(OcrResultBlock(box, block.text))
-                            }
-                        }
-                    } catch (_: Exception) {}
-                }
-            } finally {
-                recognizers.forEach { it.close() }
-            }
-        }
-
+        // Exclusively use PaddleOCR ONNX Engine for detection and recognition
+        val rawOcrBlocks = paddleEngine.processImage(inputBitmap)
         val sortedBlocks = sortMangaReadingOrder(rawOcrBlocks)
 
         val resultBitmap = inputBitmap.copy(Bitmap.Config.ARGB_8888, true)
@@ -99,17 +57,19 @@ class ImageRedrawProcessor(
                 originalText
             }
 
-            // Calculate dominant background color by edge sampling around the text box
+            // Stage 4: Advanced Adaptive Background Inpainting
             val bgColor = sampleTextEdgeColor(resultBitmap, box)
 
-            // Dynamic Inpainting: Fill original text box with sampled dynamic background color
+            // Soft rounded inpainting mask to blend cleanly with speech bubble / background
             val erasePaint = Paint().apply {
                 color = bgColor
                 style = Paint.Style.FILL
+                isAntiAlias = true
             }
-            canvas.drawRect(box, erasePaint)
+            val cornerRadius = 8f
+            canvas.drawRoundRect(RectF(box), cornerRadius, cornerRadius, erasePaint)
 
-            // Determine text color for high contrast against background
+            // Stage 5: High Contrast Typesetting
             val luminance =
                 (0.299 * Color.red(bgColor) + 0.587 * Color.green(bgColor) + 0.114 * Color.blue(bgColor)) / 255
             val textColor = if (luminance > 0.5) Color.BLACK else Color.WHITE
@@ -150,7 +110,7 @@ class ImageRedrawProcessor(
         val top = box.top.coerceIn(0, bitmap.height - 1)
         val bottom = box.bottom.coerceIn(0, bitmap.height - 1)
 
-        val step = 4
+        val step = 2
         for (x in left..right step step) {
             val pixelTop = bitmap.getPixel(x, top)
             rSum += Color.red(pixelTop)
