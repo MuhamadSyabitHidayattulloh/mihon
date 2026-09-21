@@ -89,7 +89,11 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = translationPreferences.geminiApiKey,
                         title = stringResource(MR.strings.pref_translation_gemini_api_key),
-                        subtitle = if (translationPreferences.geminiApiKey.get().isBlank()) "Not set" else "••••••••",
+                        subtitle = if (translationPreferences.geminiApiKey.get().isBlank()) {
+                            "Not set"
+                        } else {
+                            "••••••••"
+                        },
                     ),
                     Preference.PreferenceItem.EditTextPreference(
                         preference = translationPreferences.geminiModel,
@@ -103,7 +107,11 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.EditTextPreference(
                         preference = translationPreferences.openRouterApiKey,
                         title = stringResource(MR.strings.pref_translation_openrouter_api_key),
-                        subtitle = if (translationPreferences.openRouterApiKey.get().isBlank()) "Not set" else "••••••••",
+                        subtitle = if (translationPreferences.openRouterApiKey.get().isBlank()) {
+                            "Not set"
+                        } else {
+                            "••••••••"
+                        },
                     ),
                     Preference.PreferenceItem.EditTextPreference(
                         preference = translationPreferences.openRouterModel,

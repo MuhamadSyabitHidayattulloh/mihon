@@ -70,7 +70,8 @@ class TranslationManager(
         ) ?: return false
 
         val translationsDir = chapterDir.findFile("translations")
-        return translationsDir != null && translationsDir.exists() && (translationsDir.listFiles()?.isNotEmpty() == true)
+        return translationsDir != null && translationsDir.exists() &&
+            (translationsDir.listFiles()?.isNotEmpty() == true)
     }
 
     fun startTranslation(chapter: Chapter, manga: Manga) {
@@ -81,11 +82,13 @@ class TranslationManager(
             try {
                 processChapter(chapter, manga)
             } catch (e: Exception) {
-                _states.value = _states.value + (chapterId to TranslationState.Failed(
-                    stage = TranslationStage.DETECTION,
-                    message = e.message ?: "Unknown error",
-                    exception = e,
-                ))
+                _states.value = _states.value + (
+                    chapterId to TranslationState.Failed(
+                        stage = TranslationStage.DETECTION,
+                        message = e.message ?: "Unknown error",
+                        exception = e,
+                    )
+                    )
             }
         }
     }
@@ -128,10 +131,12 @@ class TranslationManager(
             ?.sortedBy { it.name } ?: emptyList()
 
         if (pageFiles.isEmpty()) {
-            _states.value = _states.value + (chapterId to TranslationState.Failed(
-                stage = TranslationStage.STORAGE,
-                message = "No pages found in chapter",
-            ))
+            _states.value = _states.value + (
+                chapterId to TranslationState.Failed(
+                    stage = TranslationStage.STORAGE,
+                    message = "No pages found in chapter",
+                )
+                )
             return@withContext
         }
 
@@ -199,12 +204,14 @@ class TranslationManager(
 
     private fun updateState(chapterId: Long, stage: TranslationStage, currentPage: Int, totalPages: Int) {
         val progress = currentPage.toFloat() / totalPages
-        _states.value = _states.value + (chapterId to TranslationState.Processing(
-            stage = stage,
-            currentPage = currentPage,
-            totalPages = totalPages,
-            progress = progress,
-        ))
+        _states.value = _states.value + (
+            chapterId to TranslationState.Processing(
+                stage = stage,
+                currentPage = currentPage,
+                totalPages = totalPages,
+                progress = progress,
+            )
+            )
     }
 
     private fun getEngine(): TranslationEngine {

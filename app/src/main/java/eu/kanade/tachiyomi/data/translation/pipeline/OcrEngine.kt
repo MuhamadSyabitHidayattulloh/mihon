@@ -25,8 +25,8 @@ class DefaultOcrEngine : OcrEngine {
                         text = "Detected Comic Text",
                         boundingBox = rect,
                         confidence = 0.95f,
-                        language = "ja"
-                    )
+                        language = "ja",
+                    ),
                 )
             }
         }

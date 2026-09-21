@@ -25,7 +25,7 @@ class DefaultInpaintingEngine : InpaintingEngine {
                 (rect.left - 4).coerceAtLeast(0),
                 (rect.top - 4).coerceAtLeast(0),
                 (rect.right + 4).coerceAtMost(bitmap.width),
-                (rect.bottom + 4).coerceAtMost(bitmap.height)
+                (rect.bottom + 4).coerceAtMost(bitmap.height),
             )
             canvas.drawRect(paddedRect, paint)
         }

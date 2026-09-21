@@ -18,7 +18,9 @@ class GoogleTranslateEngine(private val okHttpClient: OkHttpClient) : Translatio
         if (text.isBlank()) return text
         return withContext(Dispatchers.IO) {
             val src = if (sourceLang == "auto") "auto" else sourceLang
-            val url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=$src&tl=$targetLang&dt=t&q=${java.net.URLEncoder.encode(text, "UTF-8")}"
+            val encoded = java.net.URLEncoder.encode(text, "UTF-8")
+            val baseUrl = "https://translate.googleapis.com/translate_a/single"
+            val url = "$baseUrl?client=gtx&sl=$src&tl=$targetLang&dt=t&q=$encoded"
             val request = Request.Builder().url(url).build()
             try {
                 val response = okHttpClient.newCall(request).execute()
@@ -46,12 +48,18 @@ class GeminiTranslationEngine(
     override suspend fun translate(text: String, sourceLang: String, targetLang: String): String {
         if (text.isBlank() || apiKey.isBlank()) return text
         return withContext(Dispatchers.IO) {
-            val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
-            val prompt = "Translate the following comic/manga text to $targetLang. Output ONLY the translated text without commentary:\n$text"
+            val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models"
+            val url = "$baseUrl/$model:generateContent?key=$apiKey"
+            val prompt = "Translate to $targetLang:\n$text"
             val jsonBody = JSONObject().apply {
-                put("contents", JSONArray().put(JSONObject().apply {
-                    put("parts", JSONArray().put(JSONObject().put("text", prompt)))
-                }))
+                put(
+                    "contents",
+                    JSONArray().put(
+                        JSONObject().apply {
+                            put("parts", JSONArray().put(JSONObject().put("text", prompt)))
+                        },
+                    ),
+                )
             }.toString()
 
             val request = Request.Builder()
@@ -89,13 +97,18 @@ class OpenRouterTranslationEngine(
         if (text.isBlank() || apiKey.isBlank()) return text
         return withContext(Dispatchers.IO) {
             val url = "https://openrouter.ai/api/v1/chat/completions"
-            val prompt = "Translate the following comic/manga text to $targetLang. Output ONLY the translated text:\n$text"
+            val prompt = "Translate to $targetLang:\n$text"
             val jsonBody = JSONObject().apply {
                 put("model", if (model.isBlank()) "google/gemini-2.5-flash" else model)
-                put("messages", JSONArray().put(JSONObject().apply {
-                    put("role", "user")
-                    put("content", prompt)
-                }))
+                put(
+                    "messages",
+                    JSONArray().put(
+                        JSONObject().apply {
+                            put("role", "user")
+                            put("content", prompt)
+                        },
+                    ),
+                )
             }.toString()
 
             val request = Request.Builder()

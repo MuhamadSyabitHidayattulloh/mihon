@@ -19,8 +19,14 @@ class TranslationPreferences(
     val geminiModel: Preference<String> = preferenceStore.getString("pref_translation_gemini_model", "gemini-1.5-flash")
 
     val openRouterApiKey: Preference<String> = preferenceStore.getString("pref_translation_openrouter_api_key", "")
-    val openRouterModel: Preference<String> = preferenceStore.getString("pref_translation_openrouter_model", "google/gemini-2.5-flash")
+    val openRouterModel: Preference<String> = preferenceStore.getString(
+        "pref_translation_openrouter_model",
+        "google/gemini-2.5-flash",
+    )
 
     val readerFont: Preference<String> = preferenceStore.getString("pref_translation_reader_font", "manga_temple")
-    val autoTranslateAfterDownload: Preference<Boolean> = preferenceStore.getBoolean("pref_auto_translate_after_download", false)
+    val autoTranslateAfterDownload: Preference<Boolean> = preferenceStore.getBoolean(
+        "pref_auto_translate_after_download",
+        false,
+    )
 }

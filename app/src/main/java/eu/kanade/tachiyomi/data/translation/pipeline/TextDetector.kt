@@ -26,9 +26,9 @@ class DefaultTextDetector : TextDetector {
                     (width * 0.1).toInt(),
                     (height * 0.05).toInt(),
                     (width * 0.9).toInt(),
-                    (height * 0.25).toInt()
-                )
-            )
+                    (height * 0.25).toInt(),
+                ),
+            ),
         )
         regions.add(
             DetectedTextRegion(
@@ -36,9 +36,9 @@ class DefaultTextDetector : TextDetector {
                     (width * 0.1).toInt(),
                     (height * 0.70).toInt(),
                     (width * 0.9).toInt(),
-                    (height * 0.90).toInt()
-                )
-            )
+                    (height * 0.90).toInt(),
+                ),
+            ),
         )
         return regions
     }
