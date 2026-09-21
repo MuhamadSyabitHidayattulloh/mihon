@@ -322,6 +322,12 @@ dependencies {
     // String similarity
     implementation(libs.stringSimilarity)
 
+    // ML Kit
+    implementation(libs.mlkit.text.recognition)
+    implementation(libs.mlkit.text.recognition.japanese)
+    implementation(libs.mlkit.text.recognition.chinese)
+    implementation(libs.mlkit.translate)
+
     // Tests
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)

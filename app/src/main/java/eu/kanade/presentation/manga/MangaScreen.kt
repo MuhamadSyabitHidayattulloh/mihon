@@ -47,6 +47,7 @@ import androidx.compose.ui.util.fastMap
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterHeader
+import eu.kanade.presentation.manga.components.ChapterTranslationAction
 import eu.kanade.presentation.manga.components.ExpandableMangaDescription
 import eu.kanade.presentation.manga.components.MangaActionRow
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
@@ -753,12 +754,18 @@ private fun LazyListScope.sharedChapterItems(
         contentType = { MangaScreenItem.CHAPTER },
     ) { item ->
         val haptic = LocalHapticFeedback.current
+        val context = LocalContext.current
+        val translationManager = remember { context.appGraph.translationManager }
 
         when (item) {
             is ChapterList.MissingCount -> {
                 MissingChapterCountListItem(count = item.count)
             }
             is ChapterList.Item -> {
+                val translationProgress by translationManager.getProgressFlow(
+                    item.chapter.id,
+                ).collectAsState()
+
                 MangaChapterListItem(
                     title = if (manga.displayMode == Manga.CHAPTER_DISPLAY_NUMBER) {
                         stringResource(
@@ -784,6 +791,7 @@ private fun LazyListScope.sharedChapterItems(
                     downloadIndicatorEnabled = !isAnyChapterSelected && !manga.isLocal(),
                     downloadStateProvider = { item.downloadState },
                     downloadProgressProvider = { item.downloadProgress },
+                    translationProgressProvider = { translationProgress },
                     chapterSwipeStartAction = chapterSwipeStartAction,
                     chapterSwipeEndAction = chapterSwipeEndAction,
                     onLongClick = {
@@ -802,6 +810,48 @@ private fun LazyListScope.sharedChapterItems(
                         { onDownloadChapter(listOf(item), it) }
                     } else {
                         null
+                    },
+                    onTranslationClick = { action ->
+                        when (action) {
+                            ChapterTranslationAction.START, ChapterTranslationAction.START_NOW -> {
+                                val workManager = androidx.work.WorkManager.getInstance(context)
+                                val request =
+                                    androidx.work.OneTimeWorkRequestBuilder<
+                                        eu.kanade.tachiyomi.data.translation.TranslationJob,
+                                        >()
+                                        .setInputData(
+                                            androidx.work.workDataOf(
+                                                eu.kanade.tachiyomi.data.translation.TranslationJob.KEY_CHAPTER_ID to
+                                                    item.chapter.id,
+                                                eu.kanade.tachiyomi.data.translation.TranslationJob.KEY_MANGA_ID to
+                                                    manga.id,
+                                            ),
+                                        )
+                                        .build()
+                                workManager.enqueue(request)
+                            }
+                            ChapterTranslationAction.DELETE -> {
+                                val downloadProvider = context.appGraph.downloadManager.provider
+                                val sourceManager = context.appGraph.sourceManager
+                                val source = sourceManager.get(manga.source)
+                                if (source != null) {
+                                    val chapterDir = downloadProvider.findChapterDir(
+                                        item.chapter.name,
+                                        item.chapter.scanlator,
+                                        item.chapter.url,
+                                        manga.title,
+                                        source,
+                                    )
+                                    if (chapterDir != null) {
+                                        val path = chapterDir.uri.path
+                                        if (path != null) {
+                                            translationManager.deleteTranslation(java.io.File(path))
+                                        }
+                                    }
+                                }
+                            }
+                            else -> {}
+                        }
                     },
                     onChapterSwipe = {
                         onChapterSwipe(item, it)

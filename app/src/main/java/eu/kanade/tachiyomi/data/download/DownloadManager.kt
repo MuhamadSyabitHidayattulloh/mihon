@@ -41,7 +41,7 @@ import tachiyomi.i18n.MR
 @SingleIn(AppScope::class)
 class DownloadManager(
     private val context: Context,
-    private val provider: DownloadProvider,
+    val provider: DownloadProvider,
     private val cache: DownloadCache,
     private val getCategories: GetCategories,
     private val getManga: GetManga,

@@ -83,6 +83,7 @@ class Downloader(
     private val getTracks: GetTracks,
     private val store: DownloadStore,
     private val notifier: DownloadNotifier,
+    private val translationPreferences: tachiyomi.domain.translation.service.TranslationPreferences,
 ) {
     /**
      * Queue where active downloads are kept.
@@ -406,6 +407,24 @@ class Downloader(
             DiskUtil.createNoMediaFile(tmpDir, context)
 
             download.status = Download.State.DOWNLOADED
+
+            if (translationPreferences.autoTranslateAfterDownload.get()) {
+                val workManager = androidx.work.WorkManager.getInstance(context)
+                val request =
+                    androidx.work.OneTimeWorkRequestBuilder<
+                        eu.kanade.tachiyomi.data.translation.TranslationJob,
+                        >()
+                        .setInputData(
+                            androidx.work.workDataOf(
+                                eu.kanade.tachiyomi.data.translation.TranslationJob.KEY_CHAPTER_ID to
+                                    download.chapter.id,
+                                eu.kanade.tachiyomi.data.translation.TranslationJob.KEY_MANGA_ID to
+                                    download.manga.id,
+                            ),
+                        )
+                        .build()
+                workManager.enqueue(request)
+            }
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
             // If the page list threw, it will resume here

@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Code
 import mihon.icons.materialsymbols.rounded.Settings
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -25,6 +26,8 @@ fun ReaderBottomBar(
     onClickOrientation: () -> Unit,
     cropEnabled: Boolean,
     onClickCropBorder: () -> Unit,
+    showTranslatedText: Boolean = false,
+    onClickTranslate: () -> Unit = {},
     onClickSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -52,6 +55,18 @@ fun ReaderBottomBar(
             Icon(
                 painter = painterResource(if (cropEnabled) R.drawable.ic_crop_24dp else R.drawable.ic_crop_off_24dp),
                 contentDescription = stringResource(MR.strings.pref_crop_borders),
+            )
+        }
+
+        IconButton(onClick = onClickTranslate) {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.Code,
+                contentDescription = "Terjemahan",
+                tint = if (showTranslatedText) {
+                    androidx.compose.material3.MaterialTheme.colorScheme.primary
+                } else {
+                    androidx.compose.material3.LocalContentColor.current
+                },
             )
         }
 

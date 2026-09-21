@@ -196,6 +196,12 @@ object SettingsMainScreen : Screen() {
             screen = SettingsDownloadScreen,
         ),
         Item(
+            titleRes = MR.strings.label_settings,
+            formatSubtitle = { "Translate, Font, Engine & Auto Translate" },
+            icon = MaterialSymbols.Rounded.Code,
+            screen = SettingsTranslationScreen,
+        ),
+        Item(
             titleRes = MR.strings.pref_category_tracking,
             subtitleRes = MR.strings.pref_tracking_summary,
             icon = MaterialSymbols.Rounded.Sync,
