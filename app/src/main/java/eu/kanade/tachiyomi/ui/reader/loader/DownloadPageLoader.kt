@@ -33,6 +33,35 @@ internal class DownloadPageLoader(
     override var isLocal: Boolean = true
 
     override suspend fun getPages(): List<ReaderPage> {
+        val translationPreferences = context.appGraph.translationPreferences
+        val translationManager = context.appGraph.translationManager
+
+        val showTranslation = translationPreferences.showTranslationInReader.get()
+        val domainChapter = chapter.chapter.toDomainChapter()!!
+
+        if (showTranslation) {
+            val transDir = translationManager.findTranslationChapterDir(source, manga, domainChapter)
+            val files = transDir?.listFiles()?.filter {
+                it.isFile &&
+                    (
+                        it.name?.endsWith(".jpg", true) == true ||
+                            it.name?.endsWith(".jpeg", true) == true ||
+                            it.name?.endsWith(".png", true) == true ||
+                            it.name?.endsWith(".webp", true) == true
+                        )
+            }?.sortedBy { it.name }
+
+            if (!files.isNullOrEmpty()) {
+                return files.mapIndexed { index, file ->
+                    ReaderPage(index, "", "") {
+                        file.openInputStream()
+                    }.apply {
+                        status = Page.State.Ready
+                    }
+                }
+            }
+        }
+
         val dbChapter = chapter.chapter
         val chapterPath = downloadProvider.findChapterDir(
             dbChapter.name,
@@ -59,33 +88,7 @@ internal class DownloadPageLoader(
     }
 
     private fun getPagesFromDirectory(): List<ReaderPage> {
-        val translationPreferences = context.appGraph.translationPreferences
-        val translationManager = context.appGraph.translationManager
-
-        val showTranslation = translationPreferences.showTranslationInReader.get()
         val domainChapter = chapter.chapter.toDomainChapter()!!
-
-        if (showTranslation) {
-            val transDir = translationManager.findTranslationChapterDir(source, manga, domainChapter)
-            val files = transDir?.listFiles()?.filter {
-                it.isFile &&
-                    (
-                        it.name?.endsWith(".jpg", true) == true || it.name?.endsWith(".png", true) == true ||
-                            it.name?.endsWith(".webp", true) == true
-                        )
-            }?.sortedBy { it.name }
-
-            if (!files.isNullOrEmpty()) {
-                return files.mapIndexed { index, file ->
-                    ReaderPage(index, "", "") {
-                        file.openInputStream()
-                    }.apply {
-                        status = Page.State.Ready
-                    }
-                }
-            }
-        }
-
         val pages = downloadManager.buildPageList(source, manga, domainChapter)
         return pages.map { page ->
             ReaderPage(page.index, page.url, page.imageUrl) {
