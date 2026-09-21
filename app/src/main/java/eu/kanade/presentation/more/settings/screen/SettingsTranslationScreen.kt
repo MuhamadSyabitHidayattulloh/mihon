@@ -2,7 +2,6 @@ package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -11,6 +10,7 @@ import mihon.app.di.appGraph
 import tachiyomi.domain.translation.service.TranslationPreferences
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 
 object SettingsTranslationScreen : SearchableSettings {
 
@@ -83,7 +83,7 @@ object SettingsTranslationScreen : SearchableSettings {
                         preference = translationPreferences.geminiApiKey,
                         title = stringResource(MR.strings.pref_translation_gemini_api_key),
                         subtitle = if (translationPreferences.geminiApiKey.get().isBlank()) {
-                            stringResource(MR.strings.not_set)
+                            "Not set"
                         } else {
                             "••••••••"
                         },
@@ -99,7 +99,7 @@ object SettingsTranslationScreen : SearchableSettings {
                         preference = translationPreferences.openRouterApiKey,
                         title = stringResource(MR.strings.pref_translation_openrouter_api_key),
                         subtitle = if (translationPreferences.openRouterApiKey.get().isBlank()) {
-                            stringResource(MR.strings.not_set)
+                            "Not set"
                         } else {
                             "••••••••"
                         },

@@ -31,7 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -56,6 +58,7 @@ import eu.kanade.presentation.reader.appbars.ReaderAppBars
 import eu.kanade.presentation.reader.components.ChapterNavigatorType
 import eu.kanade.presentation.reader.settings.ReaderSettingsDialog
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.ReaderActivityBinding
@@ -463,9 +466,16 @@ class ReaderActivity : BaseActivity() {
         val verticalNavigatorHeight by readerPreferences.verticalNavigatorHeight.collectAsState()
 
         var showTranslation by remember { mutableStateOf(false) }
-        val translationManager = remember { (applicationContext as App).appGraph.translationManager }
-        val translationEnabled = state.manga != null && state.currentChapter != null &&
-            translationManager.isTranslationDownloaded(state.manga!!, state.currentChapter!!.chapter)
+        val translationManager = remember { graph.translationManager }
+        val translationEnabled = remember(state.manga, state.currentChapter) {
+            val manga = state.manga
+            val chapter = state.currentChapter?.chapter?.toDomainChapter()
+            if (manga != null && chapter != null) {
+                translationManager.isTranslationDownloaded(manga, chapter)
+            } else {
+                false
+            }
+        }
 
         ReaderAppBars(
             visible = state.menuVisible,

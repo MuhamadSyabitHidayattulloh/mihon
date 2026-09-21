@@ -84,7 +84,7 @@ class Downloader(
     private val store: DownloadStore,
     private val notifier: DownloadNotifier,
     private val translationPreferences: tachiyomi.domain.translation.service.TranslationPreferences,
-    private val translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager,
+    private val translationManagerProvider: () -> eu.kanade.tachiyomi.data.translation.TranslationManager,
 ) {
     /**
      * Queue where active downloads are kept.
@@ -409,7 +409,7 @@ class Downloader(
 
             download.status = Download.State.DOWNLOADED
             if (translationPreferences.autoTranslateAfterDownload.get()) {
-                translationManager.translateChapter(download.manga, download.chapter)
+                translationManagerProvider().translateChapter(download.manga, download.chapter)
             }
         } catch (error: Throwable) {
             if (error is CancellationException) throw error

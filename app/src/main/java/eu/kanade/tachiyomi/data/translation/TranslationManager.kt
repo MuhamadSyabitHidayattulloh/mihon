@@ -19,11 +19,11 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.translation.service.TranslationPreferences
-import java.io.FileOutputStream
 import java.util.concurrent.ConcurrentHashMap
 
 @Inject
@@ -45,31 +45,14 @@ class TranslationManager(
     private val _queueState = MutableStateFlow<List<ChapterTranslation>>(emptyList())
     val queueState = _queueState.asStateFlow()
 
-    fun getTranslationState(chapterId: Long): ChapterTranslation.State {
-        val inMemory = translationsMap[chapterId]
-        if (inMemory != null) return inMemory.state
-        val chapter = getChapterForId(chapterId) ?: return ChapterTranslation.State.NOT_TRANSLATED
-        val manga = getMangaForId(chapter.mangaId) ?: return ChapterTranslation.State.NOT_TRANSLATED
-        return if (isTranslationDownloaded(manga, chapter)) {
-            ChapterTranslation.State.TRANSLATED
-        } else {
-            ChapterTranslation.State.NOT_TRANSLATED
-        }
-    }
-
     fun getChapterTranslation(chapterId: Long): ChapterTranslation? {
         return translationsMap[chapterId]
     }
 
     fun isTranslationDownloaded(manga: Manga, chapter: Chapter): Boolean {
-        val chapterDir =
-            downloadManager.findChapterDir(
-                chapter.name,
-                chapter.scanlator,
-                manga.title,
-                sourceManager.get(manga.source),
-            )
-                ?: return false
+        val source = runBlocking { sourceManager.get(manga.source) } ?: return false
+        val chapterDir = downloadManager.findChapterDir(chapter, manga, source) ?: return false
+
         val translationsDir = chapterDir.findFile("translations") ?: return false
         return translationsDir.exists() && (translationsDir.listFiles()?.isNotEmpty() == true)
     }
@@ -103,15 +86,13 @@ class TranslationManager(
     }
 
     fun deleteTranslation(manga: Manga, chapter: Chapter) {
-        val chapterDir = downloadManager.findChapterDir(
-            chapter.name,
-            chapter.scanlator,
-            manga.title,
-            sourceManager.get(manga.source),
-        )
-        chapterDir?.findFile("translations")?.delete()
-        translationsMap.remove(chapter.id)
-        updateQueue()
+        scope.launch {
+            val source = sourceManager.get(manga.source) ?: return@launch
+            val chapterDir = downloadManager.findChapterDir(chapter, manga, source)
+            chapterDir?.findFile("translations")?.delete()
+            translationsMap.remove(chapter.id)
+            updateQueue()
+        }
     }
 
     private suspend fun processTranslation(translation: ChapterTranslation) {
@@ -120,18 +101,19 @@ class TranslationManager(
 
         try {
             val source = sourceManager.get(translation.manga.source)
-            val chapterDir = downloadManager.findChapterDir(
-                translation.chapter.name,
-                translation.chapter.scanlator,
-                translation.manga.title,
-                source,
-            ) ?: throw Exception("Chapter directory not found")
+                ?: throw Exception("Source not found")
+            val chapterDir = downloadManager.findChapterDir(translation.chapter, translation.manga, source)
+                ?: throw Exception("Chapter directory not found")
 
-            val files = chapterDir.listFiles()?.filter { file ->
-                file.isFile && file.name?.let { name ->
-                    !name.startsWith(".") && (name.endsWith(".jpg") || name.endsWith(".png") || name.endsWith(".webp"))
-                } == true
-            }?.sortedBy { it.name } ?: emptyList()
+            val filesList: Array<UniFile> = chapterDir.listFiles() ?: emptyArray()
+            val files = filesList.filter { file ->
+                file.isFile && (
+                    file.name?.let { name ->
+                        !name.startsWith(".") &&
+                            (name.endsWith(".jpg") || name.endsWith(".png") || name.endsWith(".webp"))
+                    } == true
+                    )
+            }.sortedBy { it.name }
 
             if (files.isEmpty()) {
                 throw Exception("No image files found in downloaded chapter")
@@ -146,7 +128,8 @@ class TranslationManager(
             val fromLang = preferences.translateFrom.get()
             val toLang = preferences.translateTo.get()
 
-            for ((index, file) in files.withIndex()) {
+            for (index in files.indices) {
+                val file = files[index]
                 if (translation.state != ChapterTranslation.State.TRANSLATING) break
 
                 translation.stage = "Processing page ${index + 1}/${files.size}"
@@ -206,13 +189,5 @@ class TranslationManager(
 
     private fun updateQueue() {
         _queueState.value = translationsMap.values.toList()
-    }
-
-    private fun getChapterForId(chapterId: Long): Chapter? {
-        return null // Dynamic lookup fallback when DB query isn't directly needed
-    }
-
-    private fun getMangaForId(mangaId: Long): Manga? {
-        return null
     }
 }
