@@ -755,7 +755,7 @@ private fun LazyListScope.sharedChapterItems(
     ) { item ->
         val haptic = LocalHapticFeedback.current
         val context = LocalContext.current
-        val translationManager = remember { context.appGraph.translationManager }
+        val translationManager = context.appGraph.translationManager
 
         when (item) {
             is ChapterList.MissingCount -> {
@@ -842,11 +842,9 @@ private fun LazyListScope.sharedChapterItems(
                                         manga.title,
                                         source,
                                     )
-                                    if (chapterDir != null) {
-                                        val path = chapterDir.uri.path
-                                        if (path != null) {
-                                            translationManager.deleteTranslation(java.io.File(path))
-                                        }
+                                    val path = chapterDir?.uri?.path?.toString()
+                                    if (path != null) {
+                                        translationManager.deleteTranslation(java.io.File(path))
                                     }
                                 }
                             }
