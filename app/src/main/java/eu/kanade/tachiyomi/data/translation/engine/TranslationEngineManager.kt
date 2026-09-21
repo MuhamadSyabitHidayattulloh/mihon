@@ -15,6 +15,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -47,7 +48,7 @@ class TranslationEngineManager(
     }
 
     suspend fun translate(text: String, sourceLang: String, targetLang: String): String = withContext(Dispatchers.IO) {
-        val engine = preferences.translatorEngine().get()
+        val engine = preferences.translatorEngine.get()
         when (engine) {
             "mlkit" -> translateMlKit(text, sourceLang, targetLang)
             "google_web" -> translateGoogleWeb(text, sourceLang, targetLang)
@@ -110,9 +111,9 @@ class TranslationEngineManager(
     }
 
     private fun translateGemini(text: String, targetLang: String): String {
-        val apiKey = preferences.geminiApiKey().get()
-        val model = preferences.geminiModel().get().ifBlank { "gemini-1.5-flash" }
-        val promptTemplate = preferences.translationPrompt().get()
+        val apiKey = preferences.geminiApiKey.get()
+        val model = preferences.geminiModel.get().ifBlank { "gemini-1.5-flash" }
+        val promptTemplate = preferences.translationPrompt.get()
         val prompt = promptTemplate.replace("{text}", text) + "\nTarget language code: $targetLang"
 
         val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
@@ -153,9 +154,9 @@ class TranslationEngineManager(
     }
 
     private fun translateOpenRouter(text: String, targetLang: String): String {
-        val apiKey = preferences.openRouterApiKey().get()
-        val model = preferences.openRouterModel().get().ifBlank { "google/gemini-2.0-flash-001" }
-        val promptTemplate = preferences.translationPrompt().get()
+        val apiKey = preferences.openRouterApiKey.get()
+        val model = preferences.openRouterModel.get().ifBlank { "google/gemini-2.0-flash-001" }
+        val promptTemplate = preferences.translationPrompt.get()
         val prompt = promptTemplate.replace("{text}", text) + "\nTarget language code: $targetLang"
 
         val url = "https://openrouter.ai/api/v1/chat/completions"

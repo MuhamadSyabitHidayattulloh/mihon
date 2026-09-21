@@ -58,8 +58,8 @@ class ImageRedrawProcessor(
         val resultBitmap = inputBitmap.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(resultBitmap)
 
-        val targetLang = preferences.targetLanguage().get()
-        val fontName = preferences.fontSelection().get()
+        val targetLang = preferences.targetLanguage.get()
+        val fontName = preferences.fontSelection.get()
         val typeface = when (fontName) {
             "Bangers" -> Typeface.create("sans-serif-black", Typeface.BOLD)
             "Mansalva" -> Typeface.create("cursive", Typeface.NORMAL)

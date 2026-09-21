@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.core.archive.ZipWriter
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.Response
@@ -408,8 +409,7 @@ class Downloader(
             download.status = Download.State.DOWNLOADED
 
             // Trigger auto translation if enabled
-            val appGraph = (context.applicationContext as? mihon.app.di.AppGraphProvider)?.appGraph
-            if (appGraph?.translationPreferences?.autoTranslateOnDownload?.get() == true) {
+            if (context.appGraph.translationPreferences.autoTranslateOnDownload.get()) {
                 try {
                     val workManager = androidx.work.WorkManager.getInstance(context)
                     val inputData = androidx.work.workDataOf(

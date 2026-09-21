@@ -43,8 +43,7 @@ class TranslationManager(
     val runningJobs = _runningJobs.asStateFlow()
 
     fun getTranslationDir(): UniFile? {
-        val baseDir = storageManager.getDownloadsDirectory() ?: return null
-        return baseDir.parent?.createDirectory("translations") ?: baseDir.createDirectory("translations")
+        return storageManager.getTranslationsDirectory()
     }
 
     fun getTranslationChapterDir(source: Source, manga: Manga, chapter: Chapter): UniFile? {

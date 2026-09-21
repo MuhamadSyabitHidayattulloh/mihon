@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import mihon.app.di.appGraph
 import mihon.core.archive.archiveReader
 import tachiyomi.domain.manga.model.Manga
 import uy.kohesive.injekt.injectLazy
@@ -58,14 +59,13 @@ internal class DownloadPageLoader(
     }
 
     private fun getPagesFromDirectory(): List<ReaderPage> {
-        val appGraph = context.applicationContext as? mihon.app.di.AppGraphProvider
-        val translationPreferences = appGraph?.appGraph?.translationPreferences
-        val translationManager = appGraph?.appGraph?.translationManager
+        val translationPreferences = context.appGraph.translationPreferences
+        val translationManager = context.appGraph.translationManager
 
-        val showTranslation = translationPreferences?.showTranslationInReader?.get() ?: false
+        val showTranslation = translationPreferences.showTranslationInReader.get()
         val domainChapter = chapter.chapter.toDomainChapter()!!
 
-        if (showTranslation && translationManager != null) {
+        if (showTranslation) {
             val transDir = translationManager.findTranslationChapterDir(source, manga, domainChapter)
             val files = transDir?.listFiles()?.filter {
                 it.isFile &&
