@@ -96,9 +96,8 @@ class TranslationManager(
             }
 
             if (archiveFile != null) {
-                val archiveReader = archiveFile.archiveReader(context)
-                val imageEntries = archiveReader.use { reader ->
-                    reader.useEntries { entries ->
+                archiveFile.archiveReader(context).use { reader ->
+                    val imageEntries = reader.useEntries { entries ->
                         val validExtensions = setOf("jpg", "jpeg", "png", "webp", "avif", "gif", "heif", "jxl", "jp2")
                         entries
                             .filter { entry ->
@@ -112,9 +111,7 @@ class TranslationManager(
                             .map { it.name }
                             .toList()
                     }
-                }
 
-                archiveReader.use { reader ->
                     for (entryName in imageEntries) {
                         val inputStream = reader.getInputStream(entryName) ?: continue
                         val originalBitmap = BitmapFactory.decodeStream(inputStream)

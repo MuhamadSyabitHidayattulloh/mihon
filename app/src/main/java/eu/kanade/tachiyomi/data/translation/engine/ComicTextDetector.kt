@@ -59,6 +59,34 @@ class ComicTextDetector(private val context: Context) {
                 }
             }
         }
-        blocks
+        deduplicateBlocks(blocks)
+    }
+
+    private fun deduplicateBlocks(blocks: List<OcrResultBlock>): List<OcrResultBlock> {
+        val result = mutableListOf<OcrResultBlock>()
+        for (block in blocks) {
+            val existingIndex = result.indexOfFirst { existing ->
+                val intersection = android.graphics.Rect()
+                if (intersection.setIntersect(existing.box, block.box)) {
+                    val interArea = intersection.width().toLong() * intersection.height().toLong()
+                    val minArea = minOf(
+                        existing.box.width().toLong() * existing.box.height().toLong(),
+                        block.box.width().toLong() * block.box.height().toLong(),
+                    )
+                    minArea > 0 && (interArea.toDouble() / minArea.toDouble()) > 0.6
+                } else {
+                    false
+                }
+            }
+            if (existingIndex == -1) {
+                result.add(block)
+            } else {
+                val existing = result[existingIndex]
+                if (block.text.length > existing.text.length) {
+                    result[existingIndex] = block
+                }
+            }
+        }
+        return result
     }
 }
