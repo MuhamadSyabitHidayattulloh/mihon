@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.translation.engine
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -23,6 +24,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class ImageRedrawProcessor(
+    private val context: Context,
     private val engineManager: TranslationEngineManager,
     private val preferences: TranslationPreferences,
 ) {
@@ -60,10 +62,15 @@ class ImageRedrawProcessor(
 
         val targetLang = preferences.targetLanguage.get()
         val fontName = preferences.fontSelection.get()
-        val typeface = when (fontName) {
-            "Bangers" -> Typeface.create("sans-serif-black", Typeface.BOLD)
-            "Mansalva" -> Typeface.create("cursive", Typeface.NORMAL)
-            else -> Typeface.create("sans-serif", Typeface.BOLD)
+        val typeface = try {
+            when (fontName) {
+                "Anime Ace" -> Typeface.createFromAsset(context.assets, "fonts/anime_ace.ttf")
+                "Manga Master BB" -> Typeface.createFromAsset(context.assets, "fonts/manga_master_bb.ttf")
+                "Comic Font" -> Typeface.createFromAsset(context.assets, "fonts/comic_font.ttf")
+                else -> Typeface.createFromAsset(context.assets, "fonts/anime_ace.ttf")
+            }
+        } catch (_: Exception) {
+            Typeface.create("sans-serif", Typeface.BOLD)
         }
 
         for (block in textBlocks) {

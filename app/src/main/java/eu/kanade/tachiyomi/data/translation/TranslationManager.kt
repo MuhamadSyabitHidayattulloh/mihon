@@ -37,7 +37,7 @@ class TranslationManager(
 ) {
 
     private val engineManager = TranslationEngineManager(preferences, networkHelper, json)
-    private val redrawProcessor = ImageRedrawProcessor(engineManager, preferences)
+    private val redrawProcessor = ImageRedrawProcessor(context, engineManager, preferences)
 
     private val _runningJobs = MutableStateFlow<Set<Long>>(emptySet())
     val runningJobs = _runningJobs.asStateFlow()

@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.app.di.appGraph
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -25,23 +26,20 @@ object SettingsTranslationScreen : SearchableSettings {
 
         val engine by translationPreferences.translatorEngine.collectAsState()
 
-        val languages = mapOf(
-            "id" to "Indonesian (Indonesian)",
-            "en" to "English (English)",
-            "ja" to "Japanese (日本語)",
-            "ko" to "Korean (한국어)",
-            "zh" to "Chinese (中文)",
-            "es" to "Spanish (Español)",
-            "fr" to "French (Français)",
-            "de" to "German (Deutsch)",
-            "ru" to "Russian (Русский)",
-            "pt" to "Portuguese (Português)",
+        val languageCodes = listOf(
+            "id", "en", "ja", "ko", "zh", "es", "fr", "de", "ru", "pt",
+            "it", "tr", "vi", "th", "ar", "pl", "nl", "uk", "hi", "fil",
         )
+        val languages = remember(context) {
+            languageCodes.associateWith { code ->
+                LocaleHelper.getSourceDisplayName(code, context)
+            }
+        }
 
         val fonts = mapOf(
-            "Comic Neue" to "Comic Neue",
-            "Bangers" to "Bangers",
-            "Mansalva" to "Mansalva",
+            "Anime Ace" to "Anime Ace",
+            "Manga Master BB" to "Manga Master BB",
+            "Comic Font" to "Comic Font",
         )
 
         val engines = mapOf(

@@ -47,6 +47,8 @@ import androidx.compose.ui.util.fastMap
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterHeader
+import eu.kanade.presentation.manga.components.ChapterTranslationIndicator
+import eu.kanade.presentation.manga.components.ChapterTranslationState
 import eu.kanade.presentation.manga.components.ExpandableMangaDescription
 import eu.kanade.presentation.manga.components.MangaActionRow
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
@@ -60,6 +62,7 @@ import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.domain.chapter.model.Chapter
@@ -435,6 +438,7 @@ private fun MangaScreenSmallImpl(
 
                     sharedChapterItems(
                         manga = state.manga,
+                        source = state.source,
                         chapters = listItem,
                         isAnyChapterSelected = chapters.fastAny { it.selected },
                         chapterSwipeStartAction = chapterSwipeStartAction,
@@ -672,6 +676,7 @@ fun MangaScreenLargeImpl(
 
                             sharedChapterItems(
                                 manga = state.manga,
+                                source = state.source,
                                 chapters = listItem,
                                 isAnyChapterSelected = chapters.fastAny { it.selected },
                                 chapterSwipeStartAction = chapterSwipeStartAction,
@@ -733,6 +738,7 @@ private fun SharedMangaBottomActionMenu(
 
 private fun LazyListScope.sharedChapterItems(
     manga: Manga,
+    source: eu.kanade.tachiyomi.source.Source,
     chapters: List<ChapterList>,
     isAnyChapterSelected: Boolean,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
@@ -803,6 +809,16 @@ private fun LazyListScope.sharedChapterItems(
                         { onDownloadChapter(listOf(item), it) }
                     } else {
                         null
+                    },
+                    translationState = remember(item.chapter.id) {
+                        val translationManager = context.appGraph.translationManager
+                        val isRunning = translationManager.runningJobs.value.contains(item.chapter.id)
+                        val isTranslated = translationManager.isChapterTranslated(source, manga, item.chapter)
+                        when {
+                            isRunning -> ChapterTranslationState.TRANSLATING
+                            isTranslated -> ChapterTranslationState.TRANSLATED
+                            else -> ChapterTranslationState.NOT_TRANSLATED
+                        }
                     },
                     onTranslateClick = {
                         val workManager = androidx.work.WorkManager.getInstance(context)

@@ -23,7 +23,7 @@ class TranslationPreferences(
 
     val fontSelection: Preference<String> = preferenceStore.getString(
         "pref_translation_font_selection_key",
-        "Comic Neue",
+        "Anime Ace",
     )
 
     val translatorEngine: Preference<String> = preferenceStore.getString(

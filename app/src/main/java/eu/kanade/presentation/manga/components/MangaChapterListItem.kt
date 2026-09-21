@@ -64,6 +64,7 @@ fun MangaChapterListItem(
     onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
+    translationState: ChapterTranslationState = ChapterTranslationState.NOT_TRANSLATED,
     onTranslateClick: (() -> Unit)? = null,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -175,16 +176,11 @@ fun MangaChapterListItem(
             }
 
             if (downloadStateProvider() == Download.State.DOWNLOADED && onTranslateClick != null) {
-                IconButton(
+                ChapterTranslationIndicator(
+                    translationState = translationState,
                     onClick = onTranslateClick,
                     modifier = Modifier.padding(start = 2.dp),
-                ) {
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.Translate,
-                        contentDescription = "Translate Chapter",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
+                )
             }
 
             ChapterDownloadIndicator(
