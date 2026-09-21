@@ -8,6 +8,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.translation.engine.CanvasRenderer
+import eu.kanade.tachiyomi.data.translation.engine.OcrEngine
 import eu.kanade.tachiyomi.data.translation.engine.TextCleaner
 import eu.kanade.tachiyomi.data.translation.engine.TextDetector
 import eu.kanade.tachiyomi.data.translation.engine.TranslatorEngine
@@ -37,7 +38,7 @@ class TranslationManager(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val translatorEngine = TranslatorEngine(preferences, networkHelper.client)
-    private val textDetector = TextDetector()
+    private val ocrEngine = OcrEngine()
     private val textCleaner = TextCleaner()
     private val canvasRenderer = CanvasRenderer(preferences)
 
@@ -139,16 +140,20 @@ class TranslationManager(
                     BitmapFactory.decodeStream(stream)
                 } ?: continue
 
-                // 1. Text detection
-                translation.stage = "Detecting text on page ${index + 1}"
-                val regions = textDetector.detectTextRegions(bitmap)
+                // 1. OCR / Text detection
+                translation.stage = "Detecting & OCR text on page ${index + 1}"
+                val regions = ocrEngine.recognizeText(bitmap, fromLang)
 
-                // 2. OCR & Translation
+                // 2. Translation
                 translation.stage = "Translating page ${index + 1}"
                 val translatedTexts = mutableListOf<String>()
                 for (region in regions) {
-                    val sample = region.sampleText.ifBlank { "Sample text" }
-                    val translated = translatorEngine.translateText(sample, fromLang, toLang)
+                    val sample = region.sampleText
+                    val translated = if (sample.isNotBlank()) {
+                        translatorEngine.translateText(sample, fromLang, toLang)
+                    } else {
+                        ""
+                    }
                     translatedTexts.add(translated)
                 }
 

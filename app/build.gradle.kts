@@ -319,6 +319,11 @@ dependencies {
     // Shizuku
     implementation(libs.bundles.shizuku)
 
+    // ML-Kit Text Recognition
+    implementation(libs.mlkit.textRecognition)
+    implementation(libs.mlkit.textRecognition.japanese)
+    implementation(libs.mlkit.textRecognition.chinese)
+
     // String similarity
     implementation(libs.stringSimilarity)
 
