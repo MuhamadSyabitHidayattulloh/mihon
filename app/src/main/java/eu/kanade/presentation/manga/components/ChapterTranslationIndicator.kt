@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Translate
-import mihon.icons.materialsymbols.roundedfilled.CheckCircle
+import mihon.icons.materialsymbols.roundedfilled.Translate
 import tachiyomi.presentation.core.components.material.IconButtonTokens
 
 enum class ChapterTranslationState {
@@ -52,7 +52,7 @@ fun ChapterTranslationIndicator(
             ChapterTranslationState.TRANSLATED -> {
                 IconButton(onClick = onClick) {
                     Icon(
-                        imageVector = MaterialSymbols.RoundedFilled.CheckCircle,
+                        imageVector = MaterialSymbols.RoundedFilled.Translate,
                         contentDescription = "Translated",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp),
