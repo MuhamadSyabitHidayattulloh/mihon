@@ -319,6 +319,7 @@ dependencies {
     implementation(libs.mlkit.text.recognition.korean)
     implementation(libs.mlkit.language.id)
     implementation(libs.mlkit.translate)
+    implementation(libs.onnxruntime.android)
 
     // Logging
     implementation(libs.logcat)

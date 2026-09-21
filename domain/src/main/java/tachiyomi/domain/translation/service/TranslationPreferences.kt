@@ -53,7 +53,7 @@ class TranslationPreferences(
 
     val translationPrompt: Preference<String> = preferenceStore.getString(
         "pref_translation_prompt_template",
-        "Translate the following manga speech bubble text into target language accurately, retaining tone, nuance, and character expressions:\n{text}",
+        "Translate the following manga speech bubble text into target language code {targetLang} accurately, retaining tone, nuance, and character expressions. Return ONLY the translated text without any explanation, markdown, notes, or preambles:\n{text}",
     )
 
     val showTranslationInReader: Preference<Boolean> = preferenceStore.getBoolean(

@@ -114,7 +114,7 @@ class TranslationEngineManager(
         val apiKey = preferences.geminiApiKey.get()
         val model = preferences.geminiModel.get().ifBlank { "gemini-1.5-flash" }
         val promptTemplate = preferences.translationPrompt.get()
-        val prompt = promptTemplate.replace("{text}", text) + "\nTarget language code: $targetLang"
+        val prompt = promptTemplate.replace("{text}", text).replace("{targetLang}", targetLang)
 
         val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
         val payload = buildJsonObject {
@@ -157,7 +157,7 @@ class TranslationEngineManager(
         val apiKey = preferences.openRouterApiKey.get()
         val model = preferences.openRouterModel.get().ifBlank { "google/gemini-2.0-flash-001" }
         val promptTemplate = preferences.translationPrompt.get()
-        val prompt = promptTemplate.replace("{text}", text) + "\nTarget language code: $targetLang"
+        val prompt = promptTemplate.replace("{text}", text).replace("{targetLang}", targetLang)
 
         val url = "https://openrouter.ai/api/v1/chat/completions"
         val payload = buildJsonObject {

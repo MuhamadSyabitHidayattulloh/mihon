@@ -84,6 +84,7 @@ mlkit-text-recognition-chinese = { module = "com.google.mlkit:text-recognition-c
 mlkit-text-recognition-korean = { module = "com.google.mlkit:text-recognition-korean", version = "16.0.1" }
 mlkit-language-id = { module = "com.google.mlkit:language-id", version = "17.0.6" }
 mlkit-translate = { module = "com.google.mlkit:translate", version = "17.0.3" }
+onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android", version = "1.17.0" }
 aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
 android-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugar" }
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle" }
