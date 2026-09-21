@@ -28,6 +28,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -47,6 +48,7 @@ import androidx.compose.ui.util.fastMap
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterHeader
+import eu.kanade.presentation.manga.components.ChapterTranslationAction
 import eu.kanade.presentation.manga.components.ExpandableMangaDescription
 import eu.kanade.presentation.manga.components.MangaActionRow
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
@@ -56,10 +58,12 @@ import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
+import eu.kanade.tachiyomi.data.translation.model.ChapterTranslation
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.domain.chapter.model.Chapter
@@ -753,12 +757,23 @@ private fun LazyListScope.sharedChapterItems(
         contentType = { MangaScreenItem.CHAPTER },
     ) { item ->
         val haptic = LocalHapticFeedback.current
+        val context = LocalContext.current
+        val translationManager = remember { context.appGraph.translationManager }
+        val translationQueue by translationManager.queueState.collectAsState()
 
         when (item) {
             is ChapterList.MissingCount -> {
                 MissingChapterCountListItem(count = item.count)
             }
             is ChapterList.Item -> {
+                val translation = translationQueue.find { it.chapter.id == item.chapter.id }
+                val translationState =
+                    translation?.state ?: if (translationManager.isTranslationDownloaded(manga, item.chapter)) {
+                        ChapterTranslation.State.TRANSLATED
+                    } else {
+                        ChapterTranslation.State.NOT_TRANSLATED
+                    }
+
                 MangaChapterListItem(
                     title = if (manga.displayMode == Manga.CHAPTER_DISPLAY_NUMBER) {
                         stringResource(
@@ -805,6 +820,24 @@ private fun LazyListScope.sharedChapterItems(
                     },
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
+                    },
+                    translationStateProvider = { translationState },
+                    translationProgressProvider = { translation?.progress ?: 0f },
+                    translationStageProvider = { translation?.stage ?: "" },
+                    translationLogsProvider = { translation?.logs ?: emptyList() },
+                    translationPagesProvider = { (translation?.completedPages ?: 0) to (translation?.totalPages ?: 0) },
+                    onTranslationClick = { action ->
+                        when (action) {
+                            ChapterTranslationAction.START, ChapterTranslationAction.RETRANSLATE -> {
+                                translationManager.translateChapter(manga, item.chapter)
+                            }
+                            ChapterTranslationAction.CANCEL -> {
+                                translationManager.cancelTranslation(item.chapter.id)
+                            }
+                            ChapterTranslationAction.DELETE -> {
+                                translationManager.deleteTranslation(manga, item.chapter)
+                            }
+                        }
                     },
                 )
             }

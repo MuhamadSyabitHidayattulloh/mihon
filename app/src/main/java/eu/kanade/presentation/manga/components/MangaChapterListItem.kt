@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.data.download.model.Download
+import eu.kanade.tachiyomi.data.translation.model.ChapterTranslation
 import me.saket.swipe.SwipeableActionsBox
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.BookmarkAdd
@@ -63,6 +64,12 @@ fun MangaChapterListItem(
     onClick: () -> Unit,
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
+    translationStateProvider: (() -> ChapterTranslation.State)? = null,
+    translationProgressProvider: (() -> Float)? = null,
+    translationStageProvider: (() -> String)? = null,
+    translationLogsProvider: (() -> List<String>)? = null,
+    translationPagesProvider: (() -> Pair<Int, Int>)? = null,
+    onTranslationClick: ((ChapterTranslationAction) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val start = getSwipeAction(
@@ -169,6 +176,19 @@ fun MangaChapterListItem(
                         }
                     }
                 }
+            }
+
+            if (downloadStateProvider() == Download.State.DOWNLOADED && translationStateProvider != null) {
+                ChapterTranslationIndicator(
+                    enabled = downloadIndicatorEnabled,
+                    modifier = Modifier.padding(start = 4.dp),
+                    translationStateProvider = translationStateProvider,
+                    translationProgressProvider = translationProgressProvider ?: { 0f },
+                    translationStageProvider = translationStageProvider ?: { "" },
+                    translationLogsProvider = translationLogsProvider ?: { emptyList() },
+                    translationPagesProvider = translationPagesProvider ?: { 0 to 0 },
+                    onClick = { onTranslationClick?.invoke(it) },
+                )
             }
 
             ChapterDownloadIndicator(

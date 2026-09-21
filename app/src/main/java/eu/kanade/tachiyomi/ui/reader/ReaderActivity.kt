@@ -462,6 +462,11 @@ class ReaderActivity : BaseActivity() {
         val verticalNavigatorOnLeft by readerPreferences.verticalNavigatorOnLeft.collectAsState()
         val verticalNavigatorHeight by readerPreferences.verticalNavigatorHeight.collectAsState()
 
+        var showTranslation by remember { mutableStateOf(false) }
+        val translationManager = remember { (applicationContext as App).appGraph.translationManager }
+        val translationEnabled = state.manga != null && state.currentChapter != null &&
+            translationManager.isTranslationDownloaded(state.manga!!, state.currentChapter!!.chapter)
+
         ReaderAppBars(
             visible = state.menuVisible,
 
@@ -518,6 +523,13 @@ class ReaderActivity : BaseActivity() {
                 menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
             },
             onClickSettings = viewModel::openSettingsDialog,
+            translationEnabled = translationEnabled,
+            showTranslation = showTranslation,
+            onClickTranslation = {
+                showTranslation = !showTranslation
+                menuToggleToast?.cancel()
+                menuToggleToast = toast(if (showTranslation) MR.strings.on else MR.strings.off)
+            },
         )
     }
 
