@@ -12,19 +12,20 @@ import eu.kanade.tachiyomi.data.translation.engine.ImageRedrawProcessor
 import eu.kanade.tachiyomi.data.translation.engine.TranslationEngineManager
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.Source
+import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
+import mihon.core.archive.archiveReader
+import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.translation.service.TranslationPreferences
-import java.io.BufferedInputStream
-import java.util.zip.ZipInputStream
 
 @Inject
 @SingleIn(AppScope::class)
@@ -84,50 +85,60 @@ class TranslationManager(
 
             val targetChapterDir = getTranslationChapterDir(source, manga, chapter) ?: return@withContext false
 
-            val cbzFile = if (downloadDir.isFile && downloadDir.name?.endsWith(".cbz", true) == true) {
+            val archiveFile = if (downloadDir.isFile) {
                 downloadDir
             } else if (downloadDir.isDirectory) {
-                downloadDir.listFiles()?.firstOrNull { it.isFile && it.name?.endsWith(".cbz", true) == true }
+                downloadDir.listFiles()?.firstOrNull {
+                    it.isFile && (it.name?.endsWith(".cbz", true) == true || it.name?.endsWith(".zip", true) == true)
+                }
             } else {
                 null
             }
 
-            if (cbzFile != null) {
-                val zis = ZipInputStream(BufferedInputStream(cbzFile.openInputStream()))
-                zis.use { zipStream ->
-                    var entry = zipStream.nextEntry
-                    while (entry != null) {
-                        val name = entry.name.substringAfterLast('/')
-                        if (!entry.isDirectory && (
-                                name.endsWith(".jpg", true) ||
-                                    name.endsWith(".jpeg", true) ||
-                                    name.endsWith(".png", true) ||
-                                    name.endsWith(".webp", true)
-                                )
-                        ) {
-                            val bytes = zipStream.readBytes()
-                            val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                            if (originalBitmap != null) {
-                                var redrawnBitmap: Bitmap? = null
-                                try {
-                                    redrawnBitmap = redrawProcessor.processAndRedraw(originalBitmap)
-                                    val targetFile = targetChapterDir.createFile(name) ?: continue
-                                    val outputStream = targetFile.openOutputStream()
-                                    redrawnBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
-                                    outputStream.flush()
-                                    outputStream.close()
-                                } finally {
-                                    if (redrawnBitmap != null && !redrawnBitmap.isRecycled) {
-                                        redrawnBitmap.recycle()
-                                    }
-                                    if (!originalBitmap.isRecycled) {
-                                        originalBitmap.recycle()
-                                    }
+            if (archiveFile != null) {
+                val archiveReader = archiveFile.archiveReader(context)
+                val imageEntries = archiveReader.use { reader ->
+                    reader.useEntries { entries ->
+                        val validExtensions = setOf("jpg", "jpeg", "png", "webp", "avif", "gif", "heif", "jxl", "jp2")
+                        entries
+                            .filter { entry ->
+                                if (!entry.isFile) return@filter false
+                                val name = entry.name.substringAfterLast('/')
+                                if (name.startsWith(".")) return@filter false
+                                val ext = name.substringAfterLast('.').lowercase()
+                                ext in validExtensions
+                            }
+                            .sortedWith { f1, f2 -> f1.name.compareToCaseInsensitiveNaturalOrder(f2.name) }
+                            .map { it.name }
+                            .toList()
+                    }
+                }
+
+                archiveReader.use { reader ->
+                    for (entryName in imageEntries) {
+                        val inputStream = reader.getInputStream(entryName) ?: continue
+                        val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                        inputStream.close()
+
+                        if (originalBitmap != null) {
+                            var redrawnBitmap: Bitmap? = null
+                            try {
+                                redrawnBitmap = redrawProcessor.processAndRedraw(originalBitmap)
+                                val fileName = entryName.substringAfterLast('/')
+                                val targetFile = targetChapterDir.createFile(fileName) ?: continue
+                                val outputStream = targetFile.openOutputStream()
+                                redrawnBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+                                outputStream.flush()
+                                outputStream.close()
+                            } finally {
+                                if (redrawnBitmap != null && !redrawnBitmap.isRecycled) {
+                                    redrawnBitmap.recycle()
+                                }
+                                if (!originalBitmap.isRecycled) {
+                                    originalBitmap.recycle()
                                 }
                             }
                         }
-                        zipStream.closeEntry()
-                        entry = zipStream.nextEntry
                     }
                 }
                 return@withContext true
