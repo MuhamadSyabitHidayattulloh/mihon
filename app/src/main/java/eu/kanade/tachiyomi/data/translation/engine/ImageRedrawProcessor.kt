@@ -4,9 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.Rect
-import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.Layout
 import android.text.StaticLayout
@@ -21,14 +19,19 @@ class ImageRedrawProcessor(
     private val preferences: TranslationPreferences,
 ) {
 
-    private val paddleEngine = PaddleOcrEngine(context)
+    private val comicDetector = ComicTextDetector(context)
+    private val lamaInpainter = LaMaInpaintingEngine(context)
 
     suspend fun processAndRedraw(inputBitmap: Bitmap): Bitmap = withContext(Dispatchers.IO) {
-        // Exclusively use PaddleOCR ONNX Engine for detection and recognition
-        val rawOcrBlocks = paddleEngine.processImage(inputBitmap)
+        // Stage 1: Comic Speech Bubble & Text Detection
+        val rawOcrBlocks = comicDetector.detectComicText(inputBitmap)
         val sortedBlocks = sortMangaReadingOrder(rawOcrBlocks)
 
-        val resultBitmap = inputBitmap.copy(Bitmap.Config.ARGB_8888, true)
+        // Stage 2: LaMa Inpainting (Erase original text & restore artwork background)
+        val textBoxes = sortedBlocks.map { it.box }
+        val inpaintedBitmap = lamaInpainter.inpaint(inputBitmap, textBoxes)
+
+        val resultBitmap = inpaintedBitmap.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(resultBitmap)
 
         val sourceLang = preferences.sourceLanguage.get()
@@ -45,6 +48,7 @@ class ImageRedrawProcessor(
             Typeface.create("sans-serif", Typeface.BOLD)
         }
 
+        // Stage 3 & 4: Translation & Skia Typesetting Overlay
         for (block in sortedBlocks) {
             val box = block.box
             val originalText = block.text
@@ -57,19 +61,7 @@ class ImageRedrawProcessor(
                 originalText
             }
 
-            // Stage 4: Advanced Adaptive Background Inpainting
             val bgColor = sampleTextEdgeColor(resultBitmap, box)
-
-            // Soft rounded inpainting mask to blend cleanly with speech bubble / background
-            val erasePaint = Paint().apply {
-                color = bgColor
-                style = Paint.Style.FILL
-                isAntiAlias = true
-            }
-            val cornerRadius = 8f
-            canvas.drawRoundRect(RectF(box), cornerRadius, cornerRadius, erasePaint)
-
-            // Stage 5: High Contrast Typesetting
             val luminance =
                 (0.299 * Color.red(bgColor) + 0.587 * Color.green(bgColor) + 0.114 * Color.blue(bgColor)) / 255
             val textColor = if (luminance > 0.5) Color.BLACK else Color.WHITE
