@@ -75,6 +75,7 @@ import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.shouldExpandFAB
 import tachiyomi.source.local.isLocal
 import kotlin.time.Instant
@@ -834,7 +835,7 @@ private fun LazyListScope.sharedChapterItems(
                             ChapterTranslationAction.DELETE -> {
                                 val downloadProvider = context.appGraph.downloadManager.provider
                                 val sourceManager = context.appGraph.sourceManager
-                                val source = sourceManager.get(manga.source)
+                                val source = sourceManager.getOrStub(manga.source)
                                 if (source != null) {
                                     val chapterDir = downloadProvider.findChapterDir(
                                         item.chapter.name,
