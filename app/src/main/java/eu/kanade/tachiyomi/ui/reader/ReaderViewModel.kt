@@ -770,6 +770,18 @@ class ReaderViewModel(
         }
     }
 
+    fun isTranslationAvailable(): Boolean {
+        val manga = manga ?: return false
+        val chapter = state.value.currentChapter?.chapter?.toDomainChapter() ?: return false
+        return translationManager.isChapterTranslated(manga, chapter)
+    }
+
+    fun toggleShowTranslated() {
+        if (!isTranslationAvailable()) return
+        readerPreferences.showTranslated.set(!readerPreferences.showTranslated.get())
+        eventChannel.trySend(Event.ReloadViewerChapters)
+    }
+
     fun toggleCropBorders(): Boolean {
         val isPagerType = ReadingMode.isPagerType(getMangaReadingMode())
         return if (isPagerType) {

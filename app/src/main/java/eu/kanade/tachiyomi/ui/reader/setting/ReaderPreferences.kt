@@ -51,6 +51,8 @@ class ReaderPreferences(
 
     val showReadingMode: Preference<Boolean> = preferenceStore.getBoolean("pref_show_reading_mode", true)
 
+    val showTranslated: Preference<Boolean> = preferenceStore.getBoolean("pref_show_translated", false)
+
     val fullscreen: Preference<Boolean> = preferenceStore.getBoolean("fullscreen", true)
 
     val drawUnderCutout: Preference<Boolean> = preferenceStore.getBoolean("cutout_short", true)
