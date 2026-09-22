@@ -92,6 +92,10 @@ interface AppGraph : ViewModelGraph {
     val privacyPreferences: PrivacyPreferences
     val securityPreferences: SecurityPreferences
     val downloadPreferences: DownloadPreferences
+    val translationPreferences: eu.kanade.domain.translation.service.TranslationPreferences
+
+    val translationManager: eu.kanade.domain.translation.service.TranslationManager
+    val translationModelDownloader: eu.kanade.domain.translation.onnx.TranslationModelDownloader
 
     val crashLogUtil: CrashLogUtil
 

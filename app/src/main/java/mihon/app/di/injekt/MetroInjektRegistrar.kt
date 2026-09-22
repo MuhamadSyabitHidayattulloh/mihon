@@ -32,6 +32,12 @@ class MetroInjektRegistrar(
 
         NetworkHelper::class.java to { graph.networkHelper },
         JavaScriptEngine::class.java to { graph.javaScriptEngine },
+
+        eu.kanade.domain.translation.service.TranslationPreferences::class.java to { graph.translationPreferences },
+        eu.kanade.domain.translation.service.TranslationManager::class.java to { graph.translationManager },
+        eu.kanade.domain.translation.onnx.TranslationModelDownloader::class.java to {
+            graph.translationModelDownloader
+        },
     )
 
     override fun <R : Any> getInstance(forType: Type): R = getInstanceOrNull(forType)

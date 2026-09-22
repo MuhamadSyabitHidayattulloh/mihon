@@ -57,6 +57,12 @@ fun MangaChapterListItem(
     downloadIndicatorEnabled: Boolean,
     downloadStateProvider: () -> Download.State,
     downloadProgressProvider: () -> Int,
+    translationProgressProvider: (() -> eu.kanade.domain.translation.model.ChapterTranslationProgress)? = null,
+    isTranslatedProvider: (() -> Boolean)? = null,
+    onTranslationStart: (() -> Unit)? = null,
+    onTranslationShowProgress: (() -> Unit)? = null,
+    onTranslationRetranslate: (() -> Unit)? = null,
+    onTranslationDelete: (() -> Unit)? = null,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     onLongClick: () -> Unit,
@@ -171,13 +177,33 @@ fun MangaChapterListItem(
                 }
             }
 
-            ChapterDownloadIndicator(
-                enabled = downloadIndicatorEnabled,
-                modifier = Modifier.padding(start = 4.dp),
-                downloadStateProvider = downloadStateProvider,
-                downloadProgressProvider = downloadProgressProvider,
-                onClick = { onDownloadClick?.invoke(it) },
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                if (onTranslationStart != null) {
+                    ChapterTranslationIndicator(
+                        enabled = downloadIndicatorEnabled,
+                        isDownloaded = downloadStateProvider() == Download.State.DOWNLOADED,
+                        translationProgressProvider = translationProgressProvider ?: {
+                            eu.kanade.domain.translation.model.ChapterTranslationProgress(0, 0)
+                        },
+                        isTranslatedProvider = isTranslatedProvider ?: { false },
+                        onStartTranslate = { onTranslationStart.invoke() },
+                        onShowProgress = { onTranslationShowProgress?.invoke() },
+                        onRetranslate = { onTranslationRetranslate?.invoke() },
+                        onDeleteTranslation = { onTranslationDelete?.invoke() },
+                    )
+                }
+
+                ChapterDownloadIndicator(
+                    enabled = downloadIndicatorEnabled,
+                    modifier = Modifier.padding(start = 2.dp),
+                    downloadStateProvider = downloadStateProvider,
+                    downloadProgressProvider = downloadProgressProvider,
+                    onClick = { onDownloadClick?.invoke(it) },
+                )
+            }
         }
     }
 }
