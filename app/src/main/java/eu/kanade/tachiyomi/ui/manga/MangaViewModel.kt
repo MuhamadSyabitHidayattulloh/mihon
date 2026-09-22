@@ -123,6 +123,7 @@ class MangaViewModel(
     private val sourceManager: SourceManager,
     private val refreshTracks: RefreshTracks,
     private val coverCache: CoverCache,
+    val translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager,
 ) : ViewModel() {
 
     val state: StateFlow<MangaViewModel.State>

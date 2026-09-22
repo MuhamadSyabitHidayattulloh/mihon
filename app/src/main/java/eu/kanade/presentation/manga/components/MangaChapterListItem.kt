@@ -59,6 +59,9 @@ fun MangaChapterListItem(
     downloadProgressProvider: () -> Int,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
+    translationProgress: tachiyomi.domain.translation.model.TranslationProgress =
+        tachiyomi.domain.translation.model.TranslationProgress(0L),
+    onTranslationClick: ((ChapterTranslationAction) -> Unit)? = null,
     onLongClick: () -> Unit,
     onClick: () -> Unit,
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
@@ -177,9 +180,9 @@ fun MangaChapterListItem(
             ) {
                 ChapterTranslationIndicator(
                     enabled = downloadIndicatorEnabled,
-                    progress = tachiyomi.domain.translation.model.TranslationProgress(0L),
+                    progress = translationProgress,
                     isDownloaded = downloadStateProvider() == Download.State.DOWNLOADED,
-                    onClick = { /* Handle translation click */ },
+                    onClick = { onTranslationClick?.invoke(it) },
                 )
                 ChapterDownloadIndicator(
                     enabled = downloadIndicatorEnabled,

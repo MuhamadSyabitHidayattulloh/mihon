@@ -40,6 +40,7 @@ import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.Explore
 import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.Palette
+import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.rounded.Security
 import mihon.icons.materialsymbols.rounded.Storage
@@ -194,6 +195,17 @@ object SettingsMainScreen : Screen() {
             subtitleRes = MR.strings.pref_downloads_summary,
             icon = MaterialSymbols.Rounded.Download,
             screen = SettingsDownloadScreen,
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_downloads,
+            formatSubtitle = { "Chapter Translation, Fonts & ONNX Models" },
+            icon = MaterialSymbols.Rounded.Public,
+            screen = SettingsTranslationScreen(
+                translationPreferences = uy.kohesive.injekt
+                    .injectLazy<tachiyomi.domain.translation.service.TranslationPreferences>().value,
+                modelManager = uy.kohesive.injekt
+                    .injectLazy<eu.kanade.tachiyomi.data.translation.TranslationModelManager>().value,
+            ),
         ),
         Item(
             titleRes = MR.strings.pref_category_tracking,

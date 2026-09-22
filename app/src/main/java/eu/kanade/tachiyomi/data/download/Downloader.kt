@@ -83,6 +83,8 @@ class Downloader(
     private val getTracks: GetTracks,
     private val store: DownloadStore,
     private val notifier: DownloadNotifier,
+    private val translationPreferences: tachiyomi.domain.translation.service.TranslationPreferences,
+    private val translationManager: () -> eu.kanade.tachiyomi.data.translation.TranslationManager,
 ) {
     /**
      * Queue where active downloads are kept.
@@ -238,6 +240,9 @@ class Downloader(
             // Remove successful download from queue
             if (download.status == Download.State.DOWNLOADED) {
                 removeFromQueue(download)
+                if (translationPreferences.autoTranslateAfterDownload.get()) {
+                    translationManager().translateChapter(download.manga, download.chapter)
+                }
             }
             if (areAllDownloadsFinished()) {
                 stop()

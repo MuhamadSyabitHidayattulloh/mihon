@@ -28,6 +28,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -47,6 +48,7 @@ import androidx.compose.ui.util.fastMap
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterHeader
+import eu.kanade.presentation.manga.components.ChapterTranslationAction
 import eu.kanade.presentation.manga.components.ExpandableMangaDescription
 import eu.kanade.presentation.manga.components.MangaActionRow
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
@@ -62,6 +64,7 @@ import eu.kanade.tachiyomi.ui.manga.MangaViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.chapter.service.missingChaptersCount
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -125,6 +128,7 @@ fun MangaScreen(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager? = null,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -498,6 +502,7 @@ fun MangaScreenLargeImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+    translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -741,6 +746,7 @@ private fun LazyListScope.sharedChapterItems(
     onDownloadChapter: ((List<ChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager? = null,
 ) {
     items(
         items = chapters,
@@ -759,6 +765,11 @@ private fun LazyListScope.sharedChapterItems(
                 MissingChapterCountListItem(count = item.count)
             }
             is ChapterList.Item -> {
+                val progresses by translationManager?.progresses?.collectAsState()
+                    ?: remember { androidx.compose.runtime.mutableStateOf(emptyMap()) }
+                val translationProgress =
+                    progresses[item.id] ?: tachiyomi.domain.translation.model.TranslationProgress(item.id)
+
                 MangaChapterListItem(
                     title = if (manga.displayMode == Manga.CHAPTER_DISPLAY_NUMBER) {
                         stringResource(
@@ -797,6 +808,19 @@ private fun LazyListScope.sharedChapterItems(
                             onToggleSelection = { onChapterSelected(item, !item.selected, false) },
                             onChapterClicked = onChapterClicked,
                         )
+                    },
+                    translationProgress = translationProgress,
+                    onTranslationClick = { action ->
+                        when (action) {
+                            ChapterTranslationAction.START, ChapterTranslationAction.RETRANSLATE -> {
+                                translationManager?.translateChapter(manga, item.chapter)
+                            }
+                            ChapterTranslationAction.DELETE -> {
+                                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launchIO {
+                                    translationManager?.deleteTranslation(manga, item.chapter)
+                                }
+                            }
+                        }
                     },
                     onDownloadClick = if (onDownloadChapter != null) {
                         { onDownloadChapter(listOf(item), it) }

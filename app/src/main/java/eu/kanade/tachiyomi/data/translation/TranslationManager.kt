@@ -10,6 +10,7 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.data.translation.engine.TranslationPipeline
+import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,7 +19,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
@@ -39,10 +39,10 @@ class TranslationManager(
     private val sourceManager: SourceManager,
     private val modelManager: TranslationModelManager,
     private val preferences: TranslationPreferences,
-    private val okHttpClient: OkHttpClient,
+    private val networkHelper: NetworkHelper,
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + Job())
-    private val pipeline by lazy { TranslationPipeline(context, modelManager, preferences, okHttpClient) }
+    private val pipeline by lazy { TranslationPipeline(context, modelManager, preferences, networkHelper.client) }
 
     private val _progresses = MutableStateFlow<Map<Long, TranslationProgress>>(emptyMap())
     val progresses: StateFlow<Map<Long, TranslationProgress>> = _progresses.asStateFlow()
