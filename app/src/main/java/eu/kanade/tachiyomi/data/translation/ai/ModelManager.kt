@@ -111,15 +111,17 @@ class ModelManager(
     companion object {
         const val MODEL_DETECTION = "Comic Text Detection"
         const val URL_DETECTION =
-            "https://huggingface.co/mangadd/comic-text-detector/resolve/main/comictextdetector.onnx"
-        const val FILE_DETECTION = "comic_text_detector.onnx"
+            "https://huggingface.co/ogkalu/comic-text-and-bubble-detector/resolve/main/detector-v4-s_int8.onnx"
+        const val FILE_DETECTION = "detector-v4-s_int8.onnx"
 
         const val MODEL_OCR = "PaddleOCR v6"
-        const val URL_OCR = "https://huggingface.co/mangadd/paddleocr-v6/resolve/main/paddle_ocr.onnx"
-        const val FILE_OCR = "paddle_ocr.onnx"
+        const val URL_OCR =
+            "https://huggingface.co/ogkalu/ppocr-v6-onnx/resolve/main/PP-OCRv6_small_rec.onnx"
+        const val FILE_OCR = "PP-OCRv6_small_rec.onnx"
 
-        const val MODEL_INPAINTING = "LaMa Inpainting"
-        const val URL_INPAINTING = "https://huggingface.co/mangadd/lama-inpainting/resolve/main/lama_inpainting.onnx"
-        const val FILE_INPAINTING = "lama_inpainting.onnx"
+        const val MODEL_INPAINTING = "AOT Inpainting"
+        const val URL_INPAINTING =
+            "https://huggingface.co/ogkalu/aot-inpainting/resolve/main/aot.onnx"
+        const val FILE_INPAINTING = "aot.onnx"
     }
 }

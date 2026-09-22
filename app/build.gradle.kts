@@ -218,6 +218,7 @@ dependencies {
     implementation(projects.presentationWidget)
     implementation(projects.telemetry)
 
+    implementation(libs.mlkit.translate)
     implementation(libs.onnxruntime.android)
 
     // Compose
