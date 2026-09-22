@@ -73,7 +73,7 @@ import kotlin.time.Duration.Companion.seconds
 @SingleIn(AppScope::class)
 class Downloader(
     private val context: Context,
-    private val provider: DownloadProvider,
+    val provider: DownloadProvider,
     private val cache: DownloadCache,
     private val sourceManager: SourceManager,
     private val chapterCache: ChapterCache,
@@ -735,7 +735,7 @@ class Downloader(
 
     private fun checkAutoTranslate(download: Download) {
         val appGraph = (context.applicationContext as? eu.kanade.tachiyomi.App)?.appGraph ?: return
-        if (appGraph.translationPreferences.autoTranslateAfterDownload().get()) {
+        if (appGraph.translationPreferences.autoTranslateAfterDownload.get()) {
             appGraph.translationManager.translateChapter(download.manga, download.chapter)
         }
     }

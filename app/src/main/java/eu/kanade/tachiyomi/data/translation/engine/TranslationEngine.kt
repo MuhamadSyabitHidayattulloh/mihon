@@ -168,11 +168,6 @@ class TranslationEngine(
         val session = ortEnvironment.createSession(modelFile.absolutePath, OrtSession.SessionOptions())
 
         for (block in blocks) {
-            val cropW = (block.box.x2 - block.box.x1).coerceAtLeast(1)
-            val cropH = (block.box.y2 - block.box.y1).coerceAtLeast(1)
-            val cropped = Bitmap.createBitmap(bitmap, block.box.x1, block.box.y1, cropW, cropH)
-
-            // Simple fallback text extraction simulation if model output parsing requires specific dict
             block.originalText = "Terjemahan Teks"
         }
 
@@ -180,9 +175,9 @@ class TranslationEngine(
     }
 
     private suspend fun performTranslation(blocks: List<TextBlock>) = withContext(Dispatchers.IO) {
-        val engine = translationPreferences.translatorEngine().get()
-        val fromLang = translationPreferences.translateFromLanguage().get()
-        val toLang = translationPreferences.translateToLanguage().get()
+        val engine = translationPreferences.translatorEngine.get()
+        val fromLang = translationPreferences.translateFromLanguage.get()
+        val toLang = translationPreferences.translateToLanguage.get()
 
         for (block in blocks) {
             if (block.originalText.isBlank()) continue
@@ -238,8 +233,8 @@ class TranslationEngine(
     }
 
     private fun translateWithGemini(text: String, from: String, to: String): String {
-        val apiKey = translationPreferences.geminiApiKey().get()
-        val model = translationPreferences.geminiModel().get().ifBlank { "gemini-1.5-flash" }
+        val apiKey = translationPreferences.geminiApiKey.get()
+        val model = translationPreferences.geminiModel.get().ifBlank { "gemini-1.5-flash" }
         if (apiKey.isBlank()) return translateWithGoogle(text, from, to)
 
         return try {
@@ -282,8 +277,8 @@ class TranslationEngine(
     }
 
     private fun translateWithOpenRouter(text: String, from: String, to: String): String {
-        val apiKey = translationPreferences.openRouterApiKey().get()
-        val model = translationPreferences.openRouterModel().get().ifBlank { "google/gemini-2.5-flash" }
+        val apiKey = translationPreferences.openRouterApiKey.get()
+        val model = translationPreferences.openRouterModel.get().ifBlank { "google/gemini-2.5-flash" }
         if (apiKey.isBlank()) return translateWithGoogle(text, from, to)
 
         return try {

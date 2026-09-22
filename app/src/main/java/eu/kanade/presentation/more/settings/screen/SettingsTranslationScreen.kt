@@ -7,12 +7,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.data.translation.TranslationModelManager
-import eu.kanade.tachiyomi.ui.base.mvi.BaseScreenModel
 import kotlinx.coroutines.launch
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Translate
 import tachiyomi.domain.translation.service.TranslationPreferences
-import tachiyomi.presentation.core.util.collectAsState
 
 class SettingsTranslationScreen : SearchableSettings {
 
@@ -23,24 +19,21 @@ class SettingsTranslationScreen : SearchableSettings {
     private lateinit var modelManager: TranslationModelManager
 
     @Composable
-    override fun getTitleRes() = tachiyomi.i18n.MR.strings.pref_category_appearance // Placeholder or custom string
+    override fun getTitleRes() = tachiyomi.i18n.MR.strings.pref_category_appearance
 
     @Composable
     override fun getPreferences(): List<Preference> {
         val scope = rememberCoroutineScope()
         val downloadStates by modelManager.downloadState.collectAsState()
 
-        val autoTranslate = translationPreferences.autoTranslateAfterDownload().collectAsState().value
-        val translatorEngine = translationPreferences.translatorEngine().collectAsState().value
-
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
-                preference = translationPreferences.autoTranslateAfterDownload(),
+                preference = translationPreferences.autoTranslateAfterDownload,
                 title = "Unduh terjemahan setelah mendownload chapter",
                 subtitle = "Otomatis menerjemahkan chapter yang baru selesai diunduh",
             ),
             Preference.PreferenceItem.ListPreference(
-                preference = translationPreferences.translateFromLanguage(),
+                preference = translationPreferences.translateFromLanguage,
                 title = "Translate From",
                 subtitle = "%s",
                 entries = mapOf(
@@ -51,7 +44,7 @@ class SettingsTranslationScreen : SearchableSettings {
                 ),
             ),
             Preference.PreferenceItem.ListPreference(
-                preference = translationPreferences.translateToLanguage(),
+                preference = translationPreferences.translateToLanguage,
                 title = "Translate To",
                 subtitle = "%s",
                 entries = mapOf(
@@ -63,7 +56,7 @@ class SettingsTranslationScreen : SearchableSettings {
                 ),
             ),
             Preference.PreferenceItem.ListPreference(
-                preference = translationPreferences.translatorEngine(),
+                preference = translationPreferences.translatorEngine,
                 title = "Tipe Translator",
                 subtitle = "%s",
                 entries = mapOf(
@@ -74,22 +67,22 @@ class SettingsTranslationScreen : SearchableSettings {
                 ),
             ),
             Preference.PreferenceItem.EditTextPreference(
-                preference = translationPreferences.geminiApiKey(),
+                preference = translationPreferences.geminiApiKey,
                 title = "Gemini API Key",
                 subtitle = "API Key untuk Gemini AI",
             ),
             Preference.PreferenceItem.EditTextPreference(
-                preference = translationPreferences.geminiModel(),
+                preference = translationPreferences.geminiModel,
                 title = "Gemini Model Name",
                 subtitle = "Default: gemini-1.5-flash",
             ),
             Preference.PreferenceItem.EditTextPreference(
-                preference = translationPreferences.openRouterApiKey(),
+                preference = translationPreferences.openRouterApiKey,
                 title = "OpenRouter API Key",
                 subtitle = "API Key untuk OpenRouter",
             ),
             Preference.PreferenceItem.EditTextPreference(
-                preference = translationPreferences.openRouterModel(),
+                preference = translationPreferences.openRouterModel,
                 title = "OpenRouter Model Name",
                 subtitle = "Default: google/gemini-2.5-flash",
             ),

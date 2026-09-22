@@ -46,8 +46,8 @@ class TranslationManager(
     }
 
     fun translateChapter(manga: Manga, chapter: Chapter) {
-        val source = sourceManager.getOrStub(manga.source)
         scope.launch {
+            val source = sourceManager.getOrStub(manga.source)
             val chapterDir = downloadManager.provider.findChapterDir(
                 chapterName = chapter.name,
                 chapterScanlator = chapter.scanlator,
@@ -151,10 +151,12 @@ class TranslationManager(
     }
 
     fun deleteTranslation(manga: Manga, chapter: Chapter) {
-        val source = sourceManager.getOrStub(manga.source)
-        translationStorageManager.deleteTranslation(manga, source, chapter)
-        _progressMap.value = _progressMap.value.toMutableMap().apply {
-            remove(chapter.id)
+        scope.launch {
+            val source = sourceManager.getOrStub(manga.source)
+            translationStorageManager.deleteTranslation(manga, source, chapter)
+            _progressMap.value = _progressMap.value.toMutableMap().apply {
+                remove(chapter.id)
+            }
         }
     }
 
