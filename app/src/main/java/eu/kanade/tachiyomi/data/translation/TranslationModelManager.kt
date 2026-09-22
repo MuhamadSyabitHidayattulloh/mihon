@@ -82,12 +82,12 @@ class TranslationModelManager(
                 "https://raw.githubusercontent.com/google/fonts/main/ofl/comicneue/ComicNeue-Bold.ttf"
             else -> "https://raw.githubusercontent.com/google/fonts/main/ofl/comicneue/ComicNeue-Bold.ttf"
         }
-        val file = getFontFile(fontName)
+        val fileName = getFontFile(fontName).name
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         val request = DownloadManager.Request(Uri.parse(url)).apply {
             setTitle("Downloading Font: $fontName")
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            setDestinationUri(Uri.fromFile(file))
+            setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, fileName)
         }
         downloadManager.enqueue(request)
     }

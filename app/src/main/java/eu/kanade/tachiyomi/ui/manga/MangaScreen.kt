@@ -162,6 +162,7 @@ class MangaScreen(
             onChapterSelected = viewModel::toggleSelection,
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
+            translationManager = viewModel.translationManager,
         )
 
         var showScanlatorsDialog by remember { mutableStateOf(false) }
