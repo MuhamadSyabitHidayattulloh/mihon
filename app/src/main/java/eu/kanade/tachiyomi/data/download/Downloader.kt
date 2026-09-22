@@ -242,9 +242,7 @@ class Downloader(
             // Remove successful download from queue
             if (download.status == Download.State.DOWNLOADED) {
                 if (translationPreferences.autoTranslateAfterDownload.get()) {
-                    download.chapter.chapter?.let { chapter ->
-                        translationManagerProvider().startTranslation(download.manga, chapter)
-                    }
+                    translationManagerProvider().startTranslation(download.manga, download.chapter)
                 }
                 removeFromQueue(download)
             }
