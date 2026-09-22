@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.translation
 
+import android.content.Context
 import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
@@ -12,10 +13,10 @@ import tachiyomi.domain.manga.model.Manga
 @Inject
 @SingleIn(AppScope::class)
 class TranslationStorageManager(
-    private val downloadProvider: DownloadProvider,
+    private val context: Context,
 ) {
-    fun getTranslationDir(manga: Manga, source: Source, chapter: Chapter): UniFile? {
-        val chapterDir = downloadProvider.findChapterDir(
+    fun getTranslationDir(manga: Manga, source: Source, provider: DownloadProvider, chapter: Chapter): UniFile? {
+        val chapterDir = provider.findChapterDir(
             chapterName = chapter.name,
             chapterScanlator = chapter.scanlator,
             chapterUrl = chapter.url,
@@ -31,14 +32,14 @@ class TranslationStorageManager(
         }
     }
 
-    fun hasTranslation(manga: Manga, source: Source, chapter: Chapter): Boolean {
-        val dir = getTranslationDir(manga, source, chapter) ?: return false
+    fun hasTranslation(manga: Manga, source: Source, provider: DownloadProvider, chapter: Chapter): Boolean {
+        val dir = getTranslationDir(manga, source, provider, chapter) ?: return false
         val files = dir.listFiles()
         return !files.isNullOrEmpty()
     }
 
-    fun deleteTranslation(manga: Manga, source: Source, chapter: Chapter): Boolean {
-        val dir = getTranslationDir(manga, source, chapter)
+    fun deleteTranslation(manga: Manga, source: Source, provider: DownloadProvider, chapter: Chapter): Boolean {
+        val dir = getTranslationDir(manga, source, provider, chapter)
         return dir?.delete() ?: false
     }
 }

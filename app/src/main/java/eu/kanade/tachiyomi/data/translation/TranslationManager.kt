@@ -42,7 +42,7 @@ class TranslationManager(
     }
 
     fun isTranslated(manga: Manga, source: Source, chapter: Chapter): Boolean {
-        return translationStorageManager.hasTranslation(manga, source, chapter)
+        return translationStorageManager.hasTranslation(manga, source, downloadManager.provider, chapter)
     }
 
     fun translateChapter(manga: Manga, chapter: Chapter) {
@@ -67,7 +67,12 @@ class TranslationManager(
                 return@launch
             }
 
-            val targetDir = translationStorageManager.getTranslationDir(manga, source, chapter)
+            val targetDir = translationStorageManager.getTranslationDir(
+                manga,
+                source,
+                downloadManager.provider,
+                chapter,
+            )
             if (targetDir == null) {
                 updateProgress(chapter.id) {
                     it.copy(
@@ -153,7 +158,7 @@ class TranslationManager(
     fun deleteTranslation(manga: Manga, chapter: Chapter) {
         scope.launch {
             val source = sourceManager.getOrStub(manga.source)
-            translationStorageManager.deleteTranslation(manga, source, chapter)
+            translationStorageManager.deleteTranslation(manga, source, downloadManager.provider, chapter)
             _progressMap.value = _progressMap.value.toMutableMap().apply {
                 remove(chapter.id)
             }

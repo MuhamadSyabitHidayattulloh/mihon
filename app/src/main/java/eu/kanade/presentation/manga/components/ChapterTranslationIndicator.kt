@@ -15,7 +15,6 @@ import mihon.icons.materialsymbols.rounded.Error
 import mihon.icons.materialsymbols.rounded.Translate
 import tachiyomi.domain.translation.model.TranslationProgress
 import tachiyomi.domain.translation.model.TranslationState
-import mihon.icons.materialsymbols.roundedfilled.Translate as FilledTranslate
 
 @Composable
 fun ChapterTranslationIndicator(
@@ -65,7 +64,7 @@ fun ChapterTranslationIndicator(
             }
             TranslationState.TRANSLATED -> {
                 Icon(
-                    imageVector = MaterialSymbols.FilledTranslate,
+                    imageVector = MaterialSymbols.Rounded.Translate,
                     contentDescription = "Translated",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp),
