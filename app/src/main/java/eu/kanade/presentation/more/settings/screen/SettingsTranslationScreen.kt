@@ -42,7 +42,7 @@ object SettingsTranslationScreen : SearchableSettings {
         val modelDownloader = remember { context.appGraph.translationModelDownloader }
 
         val translatorType by translationPreferences.translatorType.collectAsState()
-        val modelsStatus by modelDownloader.status.collectAsState()
+        val modelsStatus by modelDownloader.status.collectAsState(initial = modelDownloader.getInitialStatus())
 
         val mainGroup = Preference.PreferenceGroup(
             title = "General Translation Settings",

@@ -132,19 +132,6 @@ fun MangaScreen(
     onInvertSelection: () -> Unit,
 ) {
     val context = LocalContext.current
-    var selectedTranslationChapterId by remember { mutableStateOf<Long?>(null) }
-    val translationManager = remember { context.appGraph.translationManager }
-    val progressMap by translationManager.progressFlow.collectAsState()
-
-    if (selectedTranslationChapterId != null) {
-        val progress = translationManager.getChapterProgress(selectedTranslationChapterId!!)
-        val stats = translationManager.getQueueStats()
-        ChapterTranslationBottomSheet(
-            progress = progress,
-            queueStats = stats,
-            onDismissRequest = { selectedTranslationChapterId = null },
-        )
-    }
     val onCopyTagToClipboard: (tag: String) -> Unit = {
         if (it.isNotEmpty()) {
             context.copyToClipboard(it, it)
@@ -275,6 +262,21 @@ private fun MangaScreenSmallImpl(
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
 ) {
+    val context = LocalContext.current
+    var selectedTranslationChapterId by remember { mutableStateOf<Long?>(null) }
+    val translationManager = remember { context.appGraph.translationManager }
+    val progressMap by translationManager.progressFlow.collectAsState()
+
+    if (selectedTranslationChapterId != null) {
+        val progress = translationManager.getChapterProgress(selectedTranslationChapterId!!)
+        val stats = translationManager.getQueueStats()
+        ChapterTranslationBottomSheet(
+            progress = progress,
+            queueStats = stats,
+            onDismissRequest = { selectedTranslationChapterId = null },
+        )
+    }
+
     val chapterListState = rememberLazyListState()
 
     val (chapters, listItem, isAnySelected) = remember(state) {
@@ -518,6 +520,21 @@ fun MangaScreenLargeImpl(
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
 ) {
+    val context = LocalContext.current
+    var selectedTranslationChapterId by remember { mutableStateOf<Long?>(null) }
+    val translationManager = remember { context.appGraph.translationManager }
+    val progressMap by translationManager.progressFlow.collectAsState()
+
+    if (selectedTranslationChapterId != null) {
+        val progress = translationManager.getChapterProgress(selectedTranslationChapterId!!)
+        val stats = translationManager.getQueueStats()
+        ChapterTranslationBottomSheet(
+            progress = progress,
+            queueStats = stats,
+            onDismissRequest = { selectedTranslationChapterId = null },
+        )
+    }
+
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
 
