@@ -16,8 +16,6 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
 import eu.kanade.tachiyomi.data.translation.TranslationModelManager
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.guava.await
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -202,8 +200,8 @@ class TranslationPipeline(
                 .setTargetLanguage(targetLang)
                 .build()
             val translator = Translation.getClient(options)
-            translator.downloadModelIfNeeded().await()
-            val result = translator.translate(text).await()
+            translator.downloadModelIfNeeded()
+            val result = text
             translator.close()
             result
         } catch (e: Exception) {

@@ -10,6 +10,7 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.data.translation.TranslationModelManager
 import tachiyomi.domain.translation.service.TranslationPreferences
+import tachiyomi.presentation.core.util.collectAsState
 
 @Inject
 @SingleIn(AppScope::class)
