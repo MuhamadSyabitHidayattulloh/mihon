@@ -524,7 +524,7 @@ class ReaderActivity : BaseActivity() {
             onClickToggleTranslation = {
                 val newValue = !showTranslated
                 translationPreferences.showTranslated.set(newValue)
-                viewModel.state.value.viewer?.refresh()
+                viewModel.state.value.viewerChapters?.let(::setChapters)
             },
             onClickSettings = viewModel::openSettingsDialog,
         )

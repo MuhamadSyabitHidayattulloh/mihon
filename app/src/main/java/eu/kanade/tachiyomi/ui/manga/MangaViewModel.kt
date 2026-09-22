@@ -1113,24 +1113,26 @@ class MangaViewModel(
         action: eu.kanade.presentation.manga.components.ChapterTranslationAction,
     ) {
         val manga = successState?.manga ?: return
-        when (action) {
-            eu.kanade.presentation.manga.components.ChapterTranslationAction.START,
-            eu.kanade.presentation.manga.components.ChapterTranslationAction.RETRANSLATE,
-            -> {
-                items.forEach { item ->
-                    translationManager.startTranslation(item.chapter, manga)
+        viewModelScope.launchIO {
+            when (action) {
+                eu.kanade.presentation.manga.components.ChapterTranslationAction.START,
+                eu.kanade.presentation.manga.components.ChapterTranslationAction.RETRANSLATE,
+                -> {
+                    items.forEach { item ->
+                        translationManager.startTranslation(item.chapter, manga)
+                    }
                 }
-            }
-            eu.kanade.presentation.manga.components.ChapterTranslationAction.DELETE -> {
-                items.forEach { item ->
-                    translationManager.deleteTranslation(item.chapter, manga)
+                eu.kanade.presentation.manga.components.ChapterTranslationAction.DELETE -> {
+                    items.forEach { item ->
+                        translationManager.deleteTranslation(item.chapter, manga)
+                    }
                 }
-            }
-            eu.kanade.presentation.manga.components.ChapterTranslationAction.SHOW_PROGRESS -> {
-                val chapterId = items.firstOrNull()?.id ?: return
-                val progress = translationManager.progresses.value[chapterId]
-                    ?: eu.kanade.tachiyomi.data.translation.TranslationProgress(chapterId = chapterId)
-                updateSuccessState { it.copy(dialog = Dialog.TranslationProgressDialog(progress)) }
+                eu.kanade.presentation.manga.components.ChapterTranslationAction.SHOW_PROGRESS -> {
+                    val chapterId = items.firstOrNull()?.id ?: return@launchIO
+                    val progress = translationManager.progresses.value[chapterId]
+                        ?: eu.kanade.tachiyomi.data.translation.TranslationProgress(chapterId = chapterId)
+                    updateSuccessState { it.copy(dialog = Dialog.TranslationProgressDialog(progress)) }
+                }
             }
         }
     }

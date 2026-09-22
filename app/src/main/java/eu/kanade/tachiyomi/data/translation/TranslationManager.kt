@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.data.translation.pipeline.CanvasRenderer
 import eu.kanade.tachiyomi.data.translation.pipeline.ImageCleaner
 import eu.kanade.tachiyomi.data.translation.pipeline.TextDetector
 import eu.kanade.tachiyomi.data.translation.pipeline.TextOcr
+import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +27,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.core.archive.archiveReader
-import okhttp3.OkHttpClient
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
@@ -73,8 +73,9 @@ class TranslationManager(
     private val sourceManager: SourceManager,
     private val translationPreferences: TranslationPreferences,
     private val modelManager: TranslationModelManager,
-    private val okHttpClient: OkHttpClient,
+    private val networkHelper: NetworkHelper,
 ) {
+    private val okHttpClient get() = networkHelper.client
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
@@ -89,7 +90,7 @@ class TranslationManager(
     private val imageCleaner = ImageCleaner()
     private val canvasRenderer = CanvasRenderer()
 
-    fun getTranslationState(chapterId: Long, chapter: Chapter, manga: Manga): TranslationState {
+    suspend fun getTranslationState(chapterId: Long, chapter: Chapter, manga: Manga): TranslationState {
         val currentState = _chapterStates.value[chapterId]
         if (currentState != null && currentState != TranslationState.NOT_TRANSLATED) {
             return currentState
@@ -101,7 +102,7 @@ class TranslationManager(
         return TranslationState.NOT_TRANSLATED
     }
 
-    fun isTranslationDownloaded(chapter: Chapter, manga: Manga): Boolean {
+    suspend fun isTranslationDownloaded(chapter: Chapter, manga: Manga): Boolean {
         val chapterDir = getChapterDir(chapter, manga) ?: return false
         val translationsDir = getTranslationsDir(chapterDir) ?: return false
         val files = translationsDir.listFiles() ?: return false
@@ -120,8 +121,8 @@ class TranslationManager(
         }
     }
 
-    private fun getChapterDir(chapter: Chapter, manga: Manga): UniFile? {
-        val source = sourceManager.get(manga.source) ?: return null
+    private suspend fun getChapterDir(chapter: Chapter, manga: Manga): UniFile? {
+        val source = sourceManager.getOrStub(manga.source)
         return downloadProvider.findChapterDir(
             chapter.name,
             chapter.scanlator,
@@ -298,7 +299,7 @@ class TranslationManager(
         }
     }
 
-    fun deleteTranslation(chapter: Chapter, manga: Manga) {
+    suspend fun deleteTranslation(chapter: Chapter, manga: Manga) {
         val chapterId = chapter.id
         val chapterDir = getChapterDir(chapter, manga)
         if (chapterDir != null) {

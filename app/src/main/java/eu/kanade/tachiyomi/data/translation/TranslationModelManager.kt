@@ -8,6 +8,7 @@ import com.google.mlkit.nl.translate.TranslateRemoteModel
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
@@ -38,8 +38,9 @@ data class ModelInfo(
 @SingleIn(AppScope::class)
 class TranslationModelManager(
     private val context: Context,
-    private val okHttpClient: OkHttpClient,
+    private val networkHelper: NetworkHelper,
 ) {
+    private val okHttpClient get() = networkHelper.client
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private val modelsDir = File(context.filesDir, "translation_models").apply { mkdirs() }
