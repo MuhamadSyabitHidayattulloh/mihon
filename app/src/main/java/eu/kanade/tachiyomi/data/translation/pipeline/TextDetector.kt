@@ -7,97 +7,108 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.RectF
 import java.io.File
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
 class TextDetector {
 
-    fun detect(bitmap: Bitmap, modelFile: File?): List<DetectedBlock> {
-        if (modelFile != null && modelFile.exists() && modelFile.length() > 0) {
+    fun detect(bitmap: Bitmap, modelFile: File?, session: OrtSession? = null): List<DetectedBlock> {
+        if (session != null) {
             try {
-                return detectWithOnnx(bitmap, modelFile)
-            } catch (_: Exception) {
+                return detectWithSession(bitmap, session)
+            } catch (_: Throwable) {
+                // Fall back if ONNX inference fails
+            }
+        } else if (modelFile != null && modelFile.exists() && modelFile.length() > 0) {
+            try {
+                val env = OrtEnvironment.getEnvironment()
+                val sessionOptions = OrtSession.SessionOptions()
+                env.createSession(modelFile.absolutePath, sessionOptions).use { newSession ->
+                    return detectWithSession(bitmap, newSession)
+                }
+            } catch (_: Throwable) {
                 // Fall back if ONNX inference fails
             }
         }
         return detectWithFallback(bitmap)
     }
 
-    private fun detectWithOnnx(bitmap: Bitmap, modelFile: File): List<DetectedBlock> {
+    private fun detectWithSession(bitmap: Bitmap, session: OrtSession): List<DetectedBlock> {
         val env = OrtEnvironment.getEnvironment()
-        val sessionOptions = OrtSession.SessionOptions()
-        val session = env.createSession(modelFile.absolutePath, sessionOptions)
+        val targetWidth = 640
+        val targetHeight = 640
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
 
-        try {
-            val targetWidth = 640
-            val targetHeight = 640
-            val scaledBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+        val byteBuffer = ByteBuffer.allocateDirect(1 * 3 * targetHeight * targetWidth * 4)
+            .order(ByteOrder.nativeOrder())
+        val floatBuffer = byteBuffer.asFloatBuffer()
 
-            val floatBuffer = FloatBuffer.allocate(1 * 3 * targetHeight * targetWidth)
-            val pixels = IntArray(targetWidth * targetHeight)
-            scaledBitmap.getPixels(pixels, 0, targetWidth, 0, 0, targetWidth, targetHeight)
+        val pixels = IntArray(targetWidth * targetHeight)
+        scaledBitmap.getPixels(pixels, 0, targetWidth, 0, 0, targetWidth, targetHeight)
 
-            // Convert to NCHW normalized float tensor
-            for (c in 0 until 3) {
-                for (i in 0 until targetHeight * targetWidth) {
-                    val px = pixels[i]
-                    val channelVal = when (c) {
-                        0 -> Color.red(px)
-                        1 -> Color.green(px)
-                        else -> Color.blue(px)
-                    } / 255.0f
-                    floatBuffer.put(channelVal)
-                }
+        for (c in 0 until 3) {
+            for (i in 0 until targetHeight * targetWidth) {
+                val px = pixels[i]
+                val channelVal = when (c) {
+                    0 -> Color.red(px)
+                    1 -> Color.green(px)
+                    else -> Color.blue(px)
+                } / 255.0f
+                floatBuffer.put(channelVal)
             }
-            floatBuffer.rewind()
+        }
+        floatBuffer.rewind()
 
-            val inputTensor = OnnxTensor.createTensor(
-                env,
-                floatBuffer,
-                longArrayOf(1, 3, targetHeight.toLong(), targetWidth.toLong()),
-            )
+        val inputTensor = OnnxTensor.createTensor(
+            env,
+            floatBuffer,
+            longArrayOf(1, 3, targetHeight.toLong(), targetWidth.toLong()),
+        )
 
-            val results = session.run(mapOf(session.inputNames.first() to inputTensor))
-            val detectedBlocks = mutableListOf<DetectedBlock>()
+        val detectedBlocks = mutableListOf<DetectedBlock>()
+        try {
+            val inputName = session.inputNames.firstOrNull() ?: return detectWithFallback(bitmap)
+            val results = session.run(mapOf(inputName to inputTensor))
+            results.use { res ->
+                if (res.size() > 0) {
+                    val outputValue = res.get(0)
+                    if (outputValue is OnnxTensor) {
+                        val outFloatBuffer = outputValue.floatBuffer
+                        val scaleX = bitmap.width.toFloat() / targetWidth
+                        val scaleY = bitmap.height.toFloat() / targetHeight
 
-            if (results.size() > 0) {
-                val outputValue = results.get(0)
-                if (outputValue is OnnxTensor) {
-                    val outFloatBuffer = outputValue.floatBuffer
-                    val scaleX = bitmap.width.toFloat() / targetWidth
-                    val scaleY = bitmap.height.toFloat() / targetHeight
+                        val elementCount = outFloatBuffer.capacity()
+                        val stride = 6
+                        val numBoxes = elementCount / stride
 
-                    val elementCount = outFloatBuffer.capacity()
-                    val stride = 6
-                    val numBoxes = elementCount / stride
+                        for (i in 0 until numBoxes) {
+                            val idx = i * stride
+                            if (idx + 4 < elementCount) {
+                                val x1 = outFloatBuffer.get(idx) * scaleX
+                                val y1 = outFloatBuffer.get(idx + 1) * scaleY
+                                val x2 = outFloatBuffer.get(idx + 2) * scaleX
+                                val y2 = outFloatBuffer.get(idx + 3) * scaleY
+                                val conf = outFloatBuffer.get(idx + 4)
 
-                    for (i in 0 until numBoxes) {
-                        val idx = i * stride
-                        if (idx + 4 < elementCount) {
-                            val x1 = outFloatBuffer.get(idx) * scaleX
-                            val y1 = outFloatBuffer.get(idx + 1) * scaleY
-                            val x2 = outFloatBuffer.get(idx + 2) * scaleX
-                            val y2 = outFloatBuffer.get(idx + 3) * scaleY
-                            val conf = outFloatBuffer.get(idx + 4)
-
-                            if (conf > 0.30f && (x2 - x1) > 10 && (y2 - y1) > 10) {
-                                detectedBlocks.add(
-                                    DetectedBlock(
-                                        boundingBox = RectF(x1, y1, x2, y2),
-                                        confidence = conf,
-                                    ),
-                                )
+                                if (conf > 0.30f && (x2 - x1) > 10 && (y2 - y1) > 10) {
+                                    detectedBlocks.add(
+                                        DetectedBlock(
+                                            boundingBox = RectF(x1, y1, x2, y2),
+                                            confidence = conf,
+                                        ),
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-
-            inputTensor.close()
-            results.close()
-            return if (detectedBlocks.isNotEmpty()) detectedBlocks else detectWithFallback(bitmap)
         } finally {
-            session.close()
+            inputTensor.close()
         }
+
+        return if (detectedBlocks.isNotEmpty()) detectedBlocks else detectWithFallback(bitmap)
     }
 
     private fun detectWithFallback(bitmap: Bitmap): List<DetectedBlock> {

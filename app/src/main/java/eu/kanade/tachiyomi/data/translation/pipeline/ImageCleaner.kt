@@ -9,7 +9,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import java.io.File
-import java.nio.FloatBuffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 class ImageCleaner {
 
@@ -17,94 +18,109 @@ class ImageCleaner {
         bitmap: Bitmap,
         textBlocks: List<TextBlock>,
         modelFile: File?,
+        session: OrtSession? = null,
     ): Bitmap {
         if (textBlocks.isEmpty()) return bitmap
 
-        if (modelFile != null && modelFile.exists() && modelFile.length() > 0) {
+        if (session != null) {
             try {
-                return cleanWithOnnx(bitmap, textBlocks, modelFile)
-            } catch (_: Exception) {
+                return cleanWithSession(bitmap, textBlocks, session)
+            } catch (_: Throwable) {
+                // Fall back if ONNX inpainting fails
+            }
+        } else if (modelFile != null && modelFile.exists() && modelFile.length() > 0) {
+            try {
+                val env = OrtEnvironment.getEnvironment()
+                val sessionOptions = OrtSession.SessionOptions()
+                env.createSession(modelFile.absolutePath, sessionOptions).use { newSession ->
+                    return cleanWithSession(bitmap, textBlocks, newSession)
+                }
+            } catch (_: Throwable) {
                 // Fall back if ONNX inpainting fails
             }
         }
         return cleanWithInpainting(bitmap, textBlocks)
     }
 
-    private fun cleanWithOnnx(
+    private fun cleanWithSession(
         bitmap: Bitmap,
         textBlocks: List<TextBlock>,
-        modelFile: File,
+        session: OrtSession,
     ): Bitmap {
         val env = OrtEnvironment.getEnvironment()
-        val sessionOptions = OrtSession.SessionOptions()
-        val session = env.createSession(modelFile.absolutePath, sessionOptions)
+        val targetDim = 512
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, targetDim, targetDim, true)
 
-        try {
-            val width = bitmap.width
-            val height = bitmap.height
+        val byteBuffer = ByteBuffer.allocateDirect(1 * 3 * targetDim * targetDim * 4)
+            .order(ByteOrder.nativeOrder())
+        val floatBuffer = byteBuffer.asFloatBuffer()
 
-            val floatBuffer = FloatBuffer.allocate(1 * 3 * height * width)
-            val pixels = IntArray(width * height)
-            bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+        val pixels = IntArray(targetDim * targetDim)
+        scaledBitmap.getPixels(pixels, 0, targetDim, 0, 0, targetDim, targetDim)
 
-            for (c in 0 until 3) {
-                for (i in 0 until height * width) {
-                    val px = pixels[i]
-                    val channelVal = when (c) {
-                        0 -> Color.red(px)
-                        1 -> Color.green(px)
-                        else -> Color.blue(px)
-                    } / 255.0f
-                    floatBuffer.put(channelVal)
-                }
+        for (c in 0 until 3) {
+            for (i in 0 until targetDim * targetDim) {
+                val px = pixels[i]
+                val channelVal = when (c) {
+                    0 -> Color.red(px)
+                    1 -> Color.green(px)
+                    else -> Color.blue(px)
+                } / 255.0f
+                floatBuffer.put(channelVal)
             }
-            floatBuffer.rewind()
-
-            val inputTensor = OnnxTensor.createTensor(
-                env,
-                floatBuffer,
-                longArrayOf(1, 3, height.toLong(), width.toLong()),
-            )
-
-            val results = session.run(mapOf(session.inputNames.first() to inputTensor))
-            var inpaintedBitmap: Bitmap? = null
-
-            if (results.size() > 0) {
-                val outputValue = results.get(0)
-                if (outputValue is OnnxTensor) {
-                    val outBuffer = outputValue.floatBuffer
-                    val pixelCount = width * height
-                    val outPixels = IntArray(pixelCount)
-
-                    for (i in 0 until pixelCount) {
-                        if (i < outBuffer.capacity()) {
-                            val r = (outBuffer.get(i) * 255.0f).coerceIn(0f, 255f).toInt()
-                            val g = (outBuffer.get((pixelCount + i).coerceAtMost(outBuffer.capacity() - 1)) * 255.0f)
-                                .coerceIn(0f, 255f).toInt()
-                            val b = (
-                                outBuffer.get(
-                                    (2 * pixelCount + i).coerceAtMost(outBuffer.capacity() - 1),
-                                ) * 255.0f
-                                )
-                                .coerceIn(0f, 255f).toInt()
-                            outPixels[i] = Color.rgb(r, g, b)
-                        } else {
-                            outPixels[i] = pixels[i]
-                        }
-                    }
-
-                    inpaintedBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                    inpaintedBitmap.setPixels(outPixels, 0, width, 0, 0, width, height)
-                }
-            }
-
-            inputTensor.close()
-            results.close()
-
-            return inpaintedBitmap ?: cleanWithInpainting(bitmap, textBlocks)
-        } finally {
-            session.close()
         }
+        floatBuffer.rewind()
+
+        val inputTensor = OnnxTensor.createTensor(
+            env,
+            floatBuffer,
+            longArrayOf(1, 3, targetDim.toLong(), targetDim.toLong()),
+        )
+
+        var inpaintedBitmap: Bitmap? = null
+        try {
+            val inputName = session.inputNames.firstOrNull() ?: return cleanWithInpainting(bitmap, textBlocks)
+            val results = session.run(mapOf(inputName to inputTensor))
+            results.use { res ->
+                if (res.size() > 0) {
+                    val outputValue = res.get(0)
+                    if (outputValue is OnnxTensor) {
+                        val outBuffer = outputValue.floatBuffer
+                        val pixelCount = targetDim * targetDim
+                        val outPixels = IntArray(pixelCount)
+
+                        for (i in 0 until pixelCount) {
+                            if (i < outBuffer.capacity()) {
+                                val r = (outBuffer.get(i) * 255.0f).coerceIn(0f, 255f).toInt()
+                                val g = (
+                                    outBuffer.get(
+                                        (pixelCount + i).coerceAtMost(outBuffer.capacity() - 1),
+                                    ) * 255.0f
+                                    )
+                                    .coerceIn(0f, 255f).toInt()
+                                val b = (
+                                    outBuffer.get(
+                                        (2 * pixelCount + i).coerceAtMost(outBuffer.capacity() - 1),
+                                    ) * 255.0f
+                                    )
+                                    .coerceIn(0f, 255f).toInt()
+                                outPixels[i] = Color.rgb(r, g, b)
+                            } else {
+                                outPixels[i] = pixels[i]
+                            }
+                        }
+
+                        val tempInpainted = Bitmap.createBitmap(targetDim, targetDim, Bitmap.Config.ARGB_8888)
+                        tempInpainted.setPixels(outPixels, 0, targetDim, 0, 0, targetDim, targetDim)
+                        inpaintedBitmap = Bitmap.createScaledBitmap(tempInpainted, bitmap.width, bitmap.height, true)
+                    }
+                }
+            }
+        } finally {
+            inputTensor.close()
+        }
+
+        return inpaintedBitmap ?: cleanWithInpainting(bitmap, textBlocks)
     }
 
     private fun cleanWithInpainting(

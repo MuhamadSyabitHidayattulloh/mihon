@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.data.translation
 
+import ai.onnxruntime.OrtEnvironment
+import ai.onnxruntime.OrtSession
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -216,78 +218,115 @@ class TranslationManager(
         val ocrModelFile = modelManager.getModelFile(TranslationModelManager.KEY_OCR)
         val inpaintingModelFile = modelManager.getModelFile(TranslationModelManager.KEY_INPAINTING)
 
+        val env = OrtEnvironment.getEnvironment()
+        val sessionOptions = OrtSession.SessionOptions()
+
+        val detectorSession: OrtSession? = detectorModelFile?.takeIf { it.exists() && it.length() > 0 }?.let {
+            try {
+                env.createSession(it.absolutePath, sessionOptions)
+            } catch (_: Throwable) {
+                null
+            }
+        }
+        val ocrSession: OrtSession? = ocrModelFile?.takeIf { it.exists() && it.length() > 0 }?.let {
+            try {
+                env.createSession(it.absolutePath, sessionOptions)
+            } catch (_: Throwable) {
+                null
+            }
+        }
+        val inpaintingSession: OrtSession? = inpaintingModelFile?.takeIf { it.exists() && it.length() > 0 }?.let {
+            try {
+                env.createSession(it.absolutePath, sessionOptions)
+            } catch (_: Throwable) {
+                null
+            }
+        }
+
         var doneCount = 0
         var failedCount = 0
 
-        for ((index, pageInput) in pageInputs.withIndex()) {
-            val pageName = pageInput.name
-            log(chapterId, "Processing page ${index + 1}/$total: $pageName")
+        try {
+            for ((index, pageInput) in pageInputs.withIndex()) {
+                val pageName = pageInput.name
+                log(chapterId, "Processing page ${index + 1}/$total: $pageName")
 
+                try {
+                    // 1. Detection
+                    updateProgress(chapterId) { it.copy(currentStage = TranslationStage.DETECTION) }
+                    val inputStream: InputStream = pageInput.openStream()
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    inputStream.close()
+
+                    if (bitmap == null) {
+                        log(chapterId, "Failed to decode image $pageName")
+                        failedCount++
+                        continue
+                    }
+
+                    val detectedBlocks = textDetector.detect(bitmap, detectorModelFile, detectorSession)
+                    log(chapterId, "Page ${index + 1}: Detected ${detectedBlocks.size} text areas.")
+
+                    // 2. OCR
+                    val textBlocks = textOcr.recognize(bitmap, detectedBlocks, ocrModelFile, ocrSession)
+
+                    // 3. Translation
+                    updateProgress(chapterId) { it.copy(currentStage = TranslationStage.TRANSLATION) }
+                    val originalTexts = textBlocks.map { it.originalText }
+                    val translatedTexts = if (originalTexts.isNotEmpty()) {
+                        engine.translate(originalTexts, srcLang, tgtLang)
+                    } else {
+                        emptyList()
+                    }
+
+                    for (i in textBlocks.indices) {
+                        textBlocks[i].translatedText = translatedTexts.getOrElse(i) { textBlocks[i].originalText }
+                    }
+
+                    // 4. Cleaning
+                    updateProgress(chapterId) { it.copy(currentStage = TranslationStage.CLEANING) }
+                    val cleanedBitmap = imageCleaner.clean(bitmap, textBlocks, inpaintingModelFile, inpaintingSession)
+
+                    // 5. Renderer
+                    updateProgress(chapterId) { it.copy(currentStage = TranslationStage.RENDERER) }
+                    val renderedBitmap = canvasRenderer.render(cleanedBitmap, textBlocks)
+
+                    // Save
+                    val outputFile = translationsDir.createFile(pageName)
+                    if (outputFile != null) {
+                        val outStream = BufferedOutputStream(outputFile.openOutputStream())
+                        renderedBitmap.compress(Bitmap.CompressFormat.JPEG, 92, outStream)
+                        outStream.flush()
+                        outStream.close()
+                        doneCount++
+                        log(chapterId, "Page ${index + 1} translation saved.")
+                    } else {
+                        failedCount++
+                        log(chapterId, "Error saving translated image $pageName")
+                    }
+                } catch (e: Exception) {
+                    failedCount++
+                    log(chapterId, "Error on page ${index + 1}: ${e.localizedMessage}")
+                }
+
+                updateProgress(chapterId) {
+                    it.copy(
+                        donePages = doneCount,
+                        failedPages = failedCount,
+                        queuePages = (total - doneCount - failedCount).coerceAtLeast(0),
+                    )
+                }
+            }
+        } finally {
             try {
-                // 1. Detection
-                updateProgress(chapterId) { it.copy(currentStage = TranslationStage.DETECTION) }
-                val inputStream: InputStream = pageInput.openStream()
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                inputStream.close()
-
-                if (bitmap == null) {
-                    log(chapterId, "Failed to decode image $pageName")
-                    failedCount++
-                    continue
-                }
-
-                val detectedBlocks = textDetector.detect(bitmap, detectorModelFile)
-                log(chapterId, "Page ${index + 1}: Detected ${detectedBlocks.size} text areas.")
-
-                // 2. OCR
-                val textBlocks = textOcr.recognize(bitmap, detectedBlocks, ocrModelFile)
-
-                // 3. Translation
-                updateProgress(chapterId) { it.copy(currentStage = TranslationStage.TRANSLATION) }
-                val originalTexts = textBlocks.map { it.originalText }
-                val translatedTexts = if (originalTexts.isNotEmpty()) {
-                    engine.translate(originalTexts, srcLang, tgtLang)
-                } else {
-                    emptyList()
-                }
-
-                for (i in textBlocks.indices) {
-                    textBlocks[i].translatedText = translatedTexts.getOrElse(i) { textBlocks[i].originalText }
-                }
-
-                // 4. Cleaning
-                updateProgress(chapterId) { it.copy(currentStage = TranslationStage.CLEANING) }
-                val cleanedBitmap = imageCleaner.clean(bitmap, textBlocks, inpaintingModelFile)
-
-                // 5. Renderer
-                updateProgress(chapterId) { it.copy(currentStage = TranslationStage.RENDERER) }
-                val renderedBitmap = canvasRenderer.render(cleanedBitmap, textBlocks)
-
-                // Save
-                val outputFile = translationsDir.createFile(pageName)
-                if (outputFile != null) {
-                    val outStream = BufferedOutputStream(outputFile.openOutputStream())
-                    renderedBitmap.compress(Bitmap.CompressFormat.JPEG, 92, outStream)
-                    outStream.flush()
-                    outStream.close()
-                    doneCount++
-                    log(chapterId, "Page ${index + 1} translation saved.")
-                } else {
-                    failedCount++
-                    log(chapterId, "Error saving translated image $pageName")
-                }
-            } catch (e: Exception) {
-                failedCount++
-                log(chapterId, "Error on page ${index + 1}: ${e.localizedMessage}")
-            }
-
-            updateProgress(chapterId) {
-                it.copy(
-                    donePages = doneCount,
-                    failedPages = failedCount,
-                    queuePages = (total - doneCount - failedCount).coerceAtLeast(0),
-                )
-            }
+                detectorSession?.close()
+            } catch (_: Throwable) {}
+            try {
+                ocrSession?.close()
+            } catch (_: Throwable) {}
+            try {
+                inpaintingSession?.close()
+            } catch (_: Throwable) {}
         }
 
         if (doneCount > 0 || total == 0) {
