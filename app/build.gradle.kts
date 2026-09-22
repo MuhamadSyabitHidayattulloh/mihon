@@ -313,6 +313,11 @@ dependencies {
     implementation(libs.bundles.markdown)
     implementation(libs.materialKolor)
 
+    // Translation & ML
+    implementation(libs.onnxruntime.android)
+    implementation(libs.mlkit.translate)
+    implementation(libs.play.services.tasks)
+
     // Logging
     implementation(libs.logcat)
 
