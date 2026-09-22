@@ -196,6 +196,12 @@ object SettingsMainScreen : Screen() {
             screen = SettingsDownloadScreen,
         ),
         Item(
+            titleRes = MR.strings.pref_category_translation,
+            subtitleRes = MR.strings.pref_translation_summary,
+            icon = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Translate,
+            screen = SettingsTranslationScreen,
+        ),
+        Item(
             titleRes = MR.strings.pref_category_tracking,
             subtitleRes = MR.strings.pref_tracking_summary,
             icon = MaterialSymbols.Rounded.Sync,
