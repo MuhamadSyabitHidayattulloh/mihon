@@ -53,7 +53,7 @@ fun ReaderBottomBar(
             enabled = false,
         ) {
             Icon(
-                imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Translate,
+                imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Public,
                 contentDescription = "Toggle Translation",
             )
         }

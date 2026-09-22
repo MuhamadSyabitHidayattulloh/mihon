@@ -41,13 +41,14 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.tachiyomi.R
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Error
-import mihon.icons.materialsymbols.rounded.Translate
+import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import tachiyomi.domain.translation.model.TranslationProgress
 import tachiyomi.domain.translation.model.TranslationState
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.IconButtonTokens
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
 import tachiyomi.presentation.core.util.secondaryItemAlpha
 
 enum class ChapterTranslationAction {
@@ -90,7 +91,7 @@ fun ChapterTranslationIndicator(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = MaterialSymbols.Rounded.Translate,
+                    imageVector = MaterialSymbols.Rounded.Public,
                     contentDescription = "Translate Chapter",
                     modifier = Modifier.size(IndicatorSize),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -135,7 +136,7 @@ fun ChapterTranslationIndicator(
                     )
                 }
                 Icon(
-                    imageVector = MaterialSymbols.Rounded.Translate,
+                    imageVector = MaterialSymbols.Rounded.Public,
                     contentDescription = null,
                     modifier = ArrowModifier,
                     tint = strokeColor,

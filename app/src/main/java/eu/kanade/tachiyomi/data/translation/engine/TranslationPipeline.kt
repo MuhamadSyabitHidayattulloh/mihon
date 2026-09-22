@@ -16,6 +16,7 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
 import eu.kanade.tachiyomi.data.translation.TranslationModelManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -94,12 +95,12 @@ class TranslationPipeline(
         val cleanedBitmap = cleanBubbles(originalBitmap, bubblesWithText)
 
         // 4. Translation Stage
-        onLog("Translating text (${preferences.translateFrom().get()} -> ${preferences.translateTo().get()})...")
+        onLog("Translating text (${preferences.translateFrom.get()} -> ${preferences.translateTo.get()})...")
         val translatedBubbles = bubblesWithText.map { bubble ->
             val translated = translateText(
                 text = bubble.text,
-                from = preferences.translateFrom().get(),
-                to = preferences.translateTo().get(),
+                from = preferences.translateFrom.get(),
+                to = preferences.translateTo.get(),
             )
             bubble.copy(translatedText = translated)
         }
@@ -181,7 +182,7 @@ class TranslationPipeline(
 
     private suspend fun translateText(text: String, from: String, to: String): String {
         if (text.isBlank()) return ""
-        val engine = preferences.translatorEngine().get()
+        val engine = preferences.translatorEngine.get()
 
         return when (engine) {
             TranslationPreferences.ENGINE_MLKIT -> translateMlKit(text, from, to)
@@ -241,11 +242,11 @@ class TranslationPipeline(
     }
 
     private fun translateGemini(text: String, from: String, to: String): String {
-        val apiKey = preferences.geminiApiKey().get()
+        val apiKey = preferences.geminiApiKey.get()
         if (apiKey.isBlank()) return translateGoogle(text, from, to)
 
         return try {
-            val model = preferences.geminiModel().get().ifBlank { "gemini-2.5-flash" }
+            val model = preferences.geminiModel.get().ifBlank { "gemini-2.5-flash" }
             val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
             val prompt =
                 "Translate the following comic text to $to accurately and concisely without additional commentary:\n$text"
@@ -285,11 +286,11 @@ class TranslationPipeline(
     }
 
     private fun translateOpenRouter(text: String, from: String, to: String): String {
-        val apiKey = preferences.openRouterApiKey().get()
+        val apiKey = preferences.openRouterApiKey.get()
         if (apiKey.isBlank()) return translateGoogle(text, from, to)
 
         return try {
-            val model = preferences.openRouterModel().get().ifBlank { "google/gemini-2.5-flash" }
+            val model = preferences.openRouterModel.get().ifBlank { "google/gemini-2.5-flash" }
             val url = "https://openrouter.ai/api/v1/chat/completions"
             val prompt =
                 "Translate the following comic text to $to accurately and concisely without additional commentary:\n$text"
@@ -327,7 +328,7 @@ class TranslationPipeline(
         val result = bitmap.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(result)
 
-        val fontName = preferences.readerFont().get()
+        val fontName = preferences.readerFont.get()
         val fontFile = modelManager.getFontFile(fontName)
         val typeface = if (fontFile.exists()) {
             Typeface.createFromFile(fontFile)

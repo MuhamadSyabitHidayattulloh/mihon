@@ -20,19 +20,19 @@ class SettingsTranslationScreen(
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = tachiyomi.i18n.MR.strings.pref_category_translation
+    override fun getTitleRes() = tachiyomi.i18n.MR.strings.pref_category_downloads
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val readerFontPref = translationPreferences.readerFont()
-        val translateFromPref = translationPreferences.translateFrom()
-        val translateToPref = translationPreferences.translateTo()
-        val enginePref = translationPreferences.translatorEngine()
-        val geminiApiKeyPref = translationPreferences.geminiApiKey()
-        val geminiModelPref = translationPreferences.geminiModel()
-        val openRouterApiKeyPref = translationPreferences.openRouterApiKey()
-        val openRouterModelPref = translationPreferences.openRouterModel()
-        val autoTranslatePref = translationPreferences.autoTranslateAfterDownload()
+        val readerFontPref = translationPreferences.readerFont
+        val translateFromPref = translationPreferences.translateFrom
+        val translateToPref = translationPreferences.translateTo
+        val enginePref = translationPreferences.translatorEngine
+        val geminiApiKeyPref = translationPreferences.geminiApiKey
+        val geminiModelPref = translationPreferences.geminiModel
+        val openRouterApiKeyPref = translationPreferences.openRouterApiKey
+        val openRouterModelPref = translationPreferences.openRouterModel
+        val autoTranslatePref = translationPreferences.autoTranslateAfterDownload
 
         val engine by enginePref.collectAsState()
 
@@ -41,7 +41,7 @@ class SettingsTranslationScreen(
                 title = "General Settings",
                 preferenceItems = listOf(
                     Preference.PreferenceItem.ListPreference(
-                        pref = readerFontPref,
+                        preference = readerFontPref,
                         title = "Reader Font",
                         subtitle = "%s",
                         entries = mapOf(
@@ -60,7 +60,7 @@ class SettingsTranslationScreen(
                         },
                     ),
                     Preference.PreferenceItem.ListPreference(
-                        pref = translateFromPref,
+                        preference = translateFromPref,
                         title = "Translate From",
                         subtitle = "%s",
                         entries = mapOf(
@@ -71,7 +71,7 @@ class SettingsTranslationScreen(
                         ),
                     ),
                     Preference.PreferenceItem.ListPreference(
-                        pref = translateToPref,
+                        preference = translateToPref,
                         title = "Translate To",
                         subtitle = "%s",
                         entries = mapOf(
@@ -82,7 +82,7 @@ class SettingsTranslationScreen(
                         ),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
-                        pref = autoTranslatePref,
+                        preference = autoTranslatePref,
                         title = "Auto-translate after download",
                         subtitle = "Automatically queue chapter for translation when download completes",
                     ),
@@ -93,7 +93,7 @@ class SettingsTranslationScreen(
                 preferenceItems = buildList {
                     add(
                         Preference.PreferenceItem.ListPreference(
-                            pref = enginePref,
+                            preference = enginePref,
                             title = "Translator Type",
                             subtitle = "%s",
                             entries = mapOf(
@@ -108,14 +108,14 @@ class SettingsTranslationScreen(
                     if (engine == TranslationPreferences.ENGINE_GEMINI) {
                         add(
                             Preference.PreferenceItem.EditTextPreference(
-                                pref = geminiApiKeyPref,
+                                preference = geminiApiKeyPref,
                                 title = "Gemini API Key",
                                 subtitle = "Input Gemini API Key",
                             ),
                         )
                         add(
                             Preference.PreferenceItem.EditTextPreference(
-                                pref = geminiModelPref,
+                                preference = geminiModelPref,
                                 title = "Gemini Model ID",
                                 subtitle = "Default: gemini-2.5-flash",
                             ),
@@ -125,14 +125,14 @@ class SettingsTranslationScreen(
                     if (engine == TranslationPreferences.ENGINE_OPENROUTER) {
                         add(
                             Preference.PreferenceItem.EditTextPreference(
-                                pref = openRouterApiKeyPref,
+                                preference = openRouterApiKeyPref,
                                 title = "OpenRouter API Key",
                                 subtitle = "Input OpenRouter API Key",
                             ),
                         )
                         add(
                             Preference.PreferenceItem.EditTextPreference(
-                                pref = openRouterModelPref,
+                                preference = openRouterModelPref,
                                 title = "OpenRouter Model ID",
                                 subtitle = "Default: google/gemini-2.5-flash",
                             ),

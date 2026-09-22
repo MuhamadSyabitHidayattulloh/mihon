@@ -51,14 +51,14 @@ class TranslationManager(
         return _progresses.value[chapterId] ?: TranslationProgress(chapterId)
     }
 
-    fun isChapterTranslated(manga: Manga, chapter: Chapter): Boolean {
+    suspend fun isChapterTranslated(manga: Manga, chapter: Chapter): Boolean {
         val source = sourceManager.get(manga.source) ?: return false
         val chapterDir =
             downloadProvider.findChapterDir(chapter.name, chapter.scanlator, chapter.url, manga.title, source)
                 ?: return false
 
         val translationsDir = if (chapterDir.name?.endsWith(".cbz") == true) {
-            val parent = chapterDir.parent
+            val parent = chapterDir.parentFile
             parent?.findFile("${chapterDir.name}_translations")
         } else {
             chapterDir.findFile("translations")
@@ -68,14 +68,14 @@ class TranslationManager(
             (translationsDir.listFiles()?.isNotEmpty() == true)
     }
 
-    fun getTranslatedImageFile(manga: Manga, chapter: Chapter, pageName: String): UniFile? {
+    suspend fun getTranslatedImageFile(manga: Manga, chapter: Chapter, pageName: String): UniFile? {
         val source = sourceManager.get(manga.source) ?: return null
         val chapterDir =
             downloadProvider.findChapterDir(chapter.name, chapter.scanlator, chapter.url, manga.title, source)
                 ?: return null
 
         val translationsDir = if (chapterDir.name?.endsWith(".cbz") == true) {
-            val parent = chapterDir.parent
+            val parent = chapterDir.parentFile
             parent?.findFile("${chapterDir.name}_translations")
         } else {
             chapterDir.findFile("translations")
@@ -116,7 +116,7 @@ class TranslationManager(
                 ?: throw IllegalStateException("Downloaded chapter not found")
 
         val targetDir: UniFile = if (chapterDir.name?.endsWith(".cbz") == true) {
-            val parent = chapterDir.parent ?: throw IllegalStateException("Parent dir null")
+            val parent = chapterDir.parentFile ?: throw IllegalStateException("Parent dir null")
             val folderName = "${chapterDir.name}_translations"
             parent.findFile(folderName) ?: parent.createDirectory(folderName)
                 ?: throw IllegalStateException("Could not create translations directory")
@@ -213,14 +213,14 @@ class TranslationManager(
         return pages
     }
 
-    fun deleteTranslation(manga: Manga, chapter: Chapter) {
+    suspend fun deleteTranslation(manga: Manga, chapter: Chapter) {
         val source = sourceManager.get(manga.source) ?: return
         val chapterDir =
             downloadProvider.findChapterDir(chapter.name, chapter.scanlator, chapter.url, manga.title, source)
                 ?: return
 
         val targetDir = if (chapterDir.name?.endsWith(".cbz") == true) {
-            val parent = chapterDir.parent
+            val parent = chapterDir.parentFile
             parent?.findFile("${chapterDir.name}_translations")
         } else {
             chapterDir.findFile("translations")
