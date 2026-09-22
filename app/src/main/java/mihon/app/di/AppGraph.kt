@@ -92,10 +92,12 @@ interface AppGraph : ViewModelGraph {
     val privacyPreferences: PrivacyPreferences
     val securityPreferences: SecurityPreferences
     val downloadPreferences: DownloadPreferences
+    val translationPreferences: tachiyomi.domain.translation.service.TranslationPreferences
 
     val crashLogUtil: CrashLogUtil
 
     val downloadManager: DownloadManager
+    val translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager
 
     val updateChecker: AppUpdateChecker
 

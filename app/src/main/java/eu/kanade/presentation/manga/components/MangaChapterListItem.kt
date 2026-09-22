@@ -171,6 +171,18 @@ fun MangaChapterListItem(
                 }
             }
 
+            if (downloadStateProvider() == Download.State.DOWNLOADED) {
+                // Showing Translation Indicator only for downloaded chapters
+                ChapterTranslationIndicator(
+                    translationProgress = tachiyomi.domain.translation.model.TranslationProgress(
+                        0L,
+                        tachiyomi.domain.translation.model.TranslationState.NOT_TRANSLATED,
+                    ),
+                    onClick = { /* Handled in MangaScreen */ },
+                    modifier = Modifier.padding(end = 2.dp),
+                )
+            }
+
             ChapterDownloadIndicator(
                 enabled = downloadIndicatorEnabled,
                 modifier = Modifier.padding(start = 4.dp),

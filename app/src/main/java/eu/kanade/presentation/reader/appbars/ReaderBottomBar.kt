@@ -48,6 +48,13 @@ fun ReaderBottomBar(
             )
         }
 
+        IconButton(onClick = { /* Toggle Translation Mode in Reader */ }) {
+            Icon(
+                imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Translate,
+                contentDescription = "Toggle Translation Redraw/Original",
+            )
+        }
+
         IconButton(onClick = onClickCropBorder) {
             Icon(
                 painter = painterResource(if (cropEnabled) R.drawable.ic_crop_24dp else R.drawable.ic_crop_off_24dp),

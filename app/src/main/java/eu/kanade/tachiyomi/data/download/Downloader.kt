@@ -238,6 +238,7 @@ class Downloader(
             // Remove successful download from queue
             if (download.status == Download.State.DOWNLOADED) {
                 removeFromQueue(download)
+                checkAutoTranslate(download)
             }
             if (areAllDownloadsFinished()) {
                 stop()
@@ -729,6 +730,13 @@ class Downloader(
 
         if (wasRunning) {
             start()
+        }
+    }
+
+    private fun checkAutoTranslate(download: Download) {
+        val appGraph = (context.applicationContext as? eu.kanade.tachiyomi.App)?.appGraph ?: return
+        if (appGraph.translationPreferences.autoTranslateAfterDownload().get()) {
+            appGraph.translationManager.translateChapter(download.manga, download.chapter)
         }
     }
 

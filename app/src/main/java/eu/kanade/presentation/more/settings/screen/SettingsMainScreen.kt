@@ -196,6 +196,12 @@ object SettingsMainScreen : Screen() {
             screen = SettingsDownloadScreen,
         ),
         Item(
+            titleRes = MR.strings.pref_category_downloads, // Will use custom text/subtitle
+            formatSubtitle = { "Pengaturan terjemahan chapter, model & API" },
+            icon = MaterialSymbols.Rounded.Palette,
+            screen = SettingsTranslationScreen(),
+        ),
+        Item(
             titleRes = MR.strings.pref_category_tracking,
             subtitleRes = MR.strings.pref_tracking_summary,
             icon = MaterialSymbols.Rounded.Sync,

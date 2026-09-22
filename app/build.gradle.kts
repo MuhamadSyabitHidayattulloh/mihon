@@ -295,6 +295,10 @@ dependencies {
 
     implementation(libs.webgpuviewer)
 
+    // ONNX Runtime & ML-Kit Translate
+    implementation(libs.onnxruntime.android)
+    implementation(libs.mlkit.translate)
+
     // UI libraries
     implementation(libs.material)
     implementation(libs.flexibleAdapter)
