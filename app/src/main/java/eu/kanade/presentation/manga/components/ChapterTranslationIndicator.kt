@@ -32,7 +32,7 @@ import eu.kanade.tachiyomi.data.translation.TranslationProgressState
 import eu.kanade.tachiyomi.data.translation.TranslationStatus
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Error
-import mihon.icons.materialsymbols.rounded.Translate
+import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.IconButtonTokens
@@ -120,7 +120,7 @@ private fun NotTranslatedIndicator(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = MaterialSymbols.Rounded.Translate,
+            imageVector = MaterialSymbols.Rounded.Public,
             contentDescription = stringResource(MR.strings.pref_category_translation),
             modifier = Modifier.size(24.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,

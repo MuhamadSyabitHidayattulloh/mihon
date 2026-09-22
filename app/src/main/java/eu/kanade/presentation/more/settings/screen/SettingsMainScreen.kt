@@ -40,11 +40,11 @@ import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.Explore
 import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.Palette
+import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.rounded.Security
 import mihon.icons.materialsymbols.rounded.Storage
 import mihon.icons.materialsymbols.rounded.Sync
-import mihon.icons.materialsymbols.rounded.Translate
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
@@ -199,7 +199,7 @@ object SettingsMainScreen : Screen() {
         Item(
             titleRes = MR.strings.pref_category_translation,
             subtitleRes = MR.strings.pref_translation_summary,
-            icon = MaterialSymbols.Rounded.Translate,
+            icon = MaterialSymbols.Rounded.Public,
             screen = SettingsTranslationScreen,
         ),
         Item(

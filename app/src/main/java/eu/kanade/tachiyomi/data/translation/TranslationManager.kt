@@ -54,12 +54,12 @@ class TranslationManager(
         return _stateMap.value[chapterId] ?: TranslationProgressState(chapterId)
     }
 
-    fun hasTranslation(manga: Manga, chapter: Chapter): Boolean {
+    suspend fun hasTranslation(manga: Manga, chapter: Chapter): Boolean {
         val dir = getTranslationDir(manga, chapter)
         return dir != null && dir.exists() && (dir.listFiles()?.isNotEmpty() == true)
     }
 
-    fun getTranslationDir(manga: Manga, chapter: Chapter): UniFile? {
+    suspend fun getTranslationDir(manga: Manga, chapter: Chapter): UniFile? {
         val source = sourceManager.get(manga.source) ?: return null
         val chapterDir = downloadProvider.findChapterDir(
             chapter.name,
@@ -72,19 +72,19 @@ class TranslationManager(
         return if (chapterDir.isDirectory) {
             chapterDir.createDirectory("translations")
         } else {
-            val parent = chapterDir.parent ?: return null
-            parent.createDirectory("${chapterDir.nameWithoutExtension}_translations")
+            val parent = chapterDir.parentFile ?: return null
+            val baseName = (chapterDir.name ?: "").substringBeforeLast(".")
+            parent.createDirectory("${baseName}_translations")
         }
     }
 
-    fun getTranslatedPageFile(manga: Manga, chapter: Chapter, pageFileName: String): UniFile? {
+    suspend fun getTranslatedPageFile(manga: Manga, chapter: Chapter, pageFileName: String): UniFile? {
         val dir = getTranslationDir(manga, chapter) ?: return null
         return dir.findFile(pageFileName) ?: dir.findFile("${pageFileName.substringBeforeLast(".")}.jpg")
     }
 
     fun startTranslation(manga: Manga, chapter: Chapter) {
         val chapterId = chapter.id
-        val source = sourceManager.get(manga.source) ?: return
 
         updateState(chapterId) {
             it.copy(
@@ -94,6 +94,16 @@ class TranslationManager(
         }
 
         scope.launch {
+            val source = sourceManager.get(manga.source)
+            if (source == null) {
+                updateState(chapterId) {
+                    it.copy(
+                        status = TranslationStatus.ERROR,
+                        errorLogs = it.errorLogs + "Source not found",
+                    )
+                }
+                return@launch
+            }
             processChapterTranslation(manga, chapter, source)
         }
     }
@@ -142,11 +152,12 @@ class TranslationManager(
 
         if (chapterDir.isDirectory) {
             val filesToProcess = chapterDir.listFiles()?.filter { file ->
-                file.isFile && !file.name.isNullOrBlank() &&
-                    !file.name.equals("translations", ignoreCase = true) &&
+                val fName = file.name ?: ""
+                file.isFile && fName.isNotBlank() &&
+                    !fName.equals("translations", ignoreCase = true) &&
                     (
-                        file.name.endsWith(".jpg", true) || file.name.endsWith(".png", true) ||
-                            file.name.endsWith(".webp", true)
+                        fName.endsWith(".jpg", true) || fName.endsWith(".png", true) ||
+                            fName.endsWith(".webp", true)
                         )
             } ?: emptyList()
 
@@ -306,9 +317,11 @@ class TranslationManager(
     }
 
     fun deleteTranslation(manga: Manga, chapter: Chapter) {
-        val dir = getTranslationDir(manga, chapter)
-        dir?.delete()
-        _stateMap.value = _stateMap.value - chapter.id
+        scope.launch {
+            val dir = getTranslationDir(manga, chapter)
+            dir?.delete()
+            _stateMap.value = _stateMap.value - chapter.id
+        }
     }
 
     private fun getActiveEngine(): TranslatorEngine {

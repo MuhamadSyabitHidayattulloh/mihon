@@ -130,11 +130,9 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.pref_model_detection_title),
                         subtitle = if (detectionDownloaded) {
-                            stringResource(
-                                MR.strings.downloaded,
-                            )
+                            stringResource(MR.strings.label_downloaded)
                         } else {
-                            stringResource(MR.strings.download)
+                            stringResource(MR.strings.action_download)
                         },
                         onClick = {
                             scope.launch {
@@ -149,11 +147,9 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.pref_model_ocr_title),
                         subtitle = if (ocrDownloaded) {
-                            stringResource(
-                                MR.strings.downloaded,
-                            )
+                            stringResource(MR.strings.label_downloaded)
                         } else {
-                            stringResource(MR.strings.download)
+                            stringResource(MR.strings.action_download)
                         },
                         onClick = {
                             scope.launch {
@@ -168,11 +164,9 @@ object SettingsTranslationScreen : SearchableSettings {
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(MR.strings.pref_model_inpainting_title),
                         subtitle = if (inpaintingDownloaded) {
-                            stringResource(
-                                MR.strings.downloaded,
-                            )
+                            stringResource(MR.strings.label_downloaded)
                         } else {
-                            stringResource(MR.strings.download)
+                            stringResource(MR.strings.action_download)
                         },
                         onClick = {
                             scope.launch {

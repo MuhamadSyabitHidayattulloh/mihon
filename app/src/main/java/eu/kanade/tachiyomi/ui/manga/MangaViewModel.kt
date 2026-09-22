@@ -140,7 +140,7 @@ class MangaViewModel(
 
     fun hasTranslation(chapter: Chapter): Boolean {
         val manga = successState?.manga ?: return false
-        return translationManager.hasTranslation(manga, chapter)
+        return kotlinx.coroutines.runBlocking { translationManager.hasTranslation(manga, chapter) }
     }
 
     fun getTranslationState(chapterId: Long): TranslationProgressState {

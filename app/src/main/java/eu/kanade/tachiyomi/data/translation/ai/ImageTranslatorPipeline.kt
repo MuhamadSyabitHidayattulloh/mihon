@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.data.translation.ai
 
+import ai.onnxruntime.OrtEnvironment
+import ai.onnxruntime.OrtSession
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color

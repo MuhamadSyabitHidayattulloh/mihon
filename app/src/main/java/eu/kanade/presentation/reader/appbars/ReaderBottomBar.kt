@@ -14,8 +14,8 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Public
 import mihon.icons.materialsymbols.rounded.Settings
-import mihon.icons.materialsymbols.rounded.Translate
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -62,7 +62,7 @@ fun ReaderBottomBar(
         if (onClickTranslation != null) {
             IconButton(onClick = onClickTranslation) {
                 Icon(
-                    imageVector = MaterialSymbols.Rounded.Translate,
+                    imageVector = MaterialSymbols.Rounded.Public,
                     contentDescription = stringResource(MR.strings.action_toggle_translation),
                     tint = if (showTranslation) {
                         MaterialTheme.colorScheme.primary

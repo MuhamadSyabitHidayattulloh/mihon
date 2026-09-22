@@ -64,7 +64,9 @@ internal class DownloadPageLoader(
         if (showTranslation) {
             pages.forEachIndexed { index, page ->
                 val fileName = "${index + 1}.jpg"
-                val translatedFile = translationManager.getTranslatedPageFile(manga, dbChapter, fileName)
+                val translatedFile = kotlinx.coroutines.runBlocking {
+                    translationManager.getTranslatedPageFile(manga, dbChapter, fileName)
+                }
                 if (translatedFile != null && translatedFile.exists()) {
                     page.stream = { translatedFile.openInputStream() }
                 }
@@ -82,7 +84,9 @@ internal class DownloadPageLoader(
             val originalStreamFn = { context.contentResolver.openInputStream(page.uri ?: Uri.EMPTY)!! }
             val streamFn = if (showTranslation) {
                 val fileName = page.uri?.lastPathSegment ?: "${page.index + 1}.jpg"
-                val translatedFile = translationManager.getTranslatedPageFile(manga, dbChapter, fileName)
+                val translatedFile = kotlinx.coroutines.runBlocking {
+                    translationManager.getTranslatedPageFile(manga, dbChapter, fileName)
+                }
                 if (translatedFile != null && translatedFile.exists()) {
                     { translatedFile.openInputStream() }
                 } else {
