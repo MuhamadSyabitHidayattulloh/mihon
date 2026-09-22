@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
@@ -70,7 +71,7 @@ class TranslationManager(
     }
 
     fun isChapterTranslated(manga: Manga, chapter: Chapter): Boolean {
-        val source = sourceManager.get(manga.source) ?: return false
+        val source = runBlocking { sourceManager.get(manga.source) } ?: return false
         val chapterDir = downloadProvider.findChapterDir(
             chapterName = chapter.name,
             chapterScanlator = chapter.scanlator,
@@ -302,7 +303,7 @@ class TranslationManager(
     }
 
     fun deleteTranslation(manga: Manga, chapter: Chapter) {
-        val source = sourceManager.get(manga.source) ?: return
+        val source = runBlocking { sourceManager.get(manga.source) } ?: return
         val chapterDir = downloadProvider.findChapterDir(
             chapterName = chapter.name,
             chapterScanlator = chapter.scanlator,
