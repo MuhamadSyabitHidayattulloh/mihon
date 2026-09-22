@@ -29,6 +29,7 @@ import eu.kanade.presentation.manga.ChapterSettingsDialog
 import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.manga.EditCoverAction
 import eu.kanade.presentation.manga.MangaScreen
+import eu.kanade.presentation.manga.components.ChapterTranslationAction
 import eu.kanade.presentation.manga.components.DeleteChaptersDialog
 import eu.kanade.presentation.manga.components.MangaCoverDialog
 import eu.kanade.presentation.manga.components.ScanlatorFilterDialog
@@ -162,6 +163,16 @@ class MangaScreen(
             onChapterSelected = viewModel::toggleSelection,
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
+            onTranslationAction = { item, action ->
+                when (action) {
+                    ChapterTranslationAction.START,
+                    ChapterTranslationAction.RETRANSLATE,
+                    -> viewModel.startTranslation(item.chapter)
+                    ChapterTranslationAction.DELETE -> viewModel.deleteTranslation(item.chapter)
+                }
+            },
+            onHasTranslation = { chapter -> viewModel.hasTranslation(chapter) },
+            onGetTranslationState = { chapterId -> viewModel.getTranslationState(chapterId) },
         )
 
         var showScanlatorsDialog by remember { mutableStateOf(false) }

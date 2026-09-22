@@ -28,6 +28,8 @@ class ReaderPreferences(
 
     val flashPageInterval: Preference<Int> = preferenceStore.getInt("pref_reader_flash_interval", 1)
 
+    val showTranslation: Preference<Boolean> = preferenceStore.getBoolean("pref_reader_show_translation", false)
+
     val flashColor: Preference<FlashColor> = preferenceStore.getEnum("pref_reader_flash_mode", FlashColor.BLACK)
 
     val doubleTapAnimSpeed: Preference<Int> = preferenceStore.getInt("pref_double_tap_anim_speed", 500)

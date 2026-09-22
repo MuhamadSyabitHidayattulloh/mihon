@@ -218,6 +218,8 @@ dependencies {
     implementation(projects.presentationWidget)
     implementation(projects.telemetry)
 
+    implementation(libs.onnxruntime.android)
+
     // Compose
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.foundation)

@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.library.LibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
+import eu.kanade.tachiyomi.data.translation.TranslationManager
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.Page
@@ -59,6 +60,7 @@ import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracks
+import tachiyomi.domain.translation.service.TranslationPreferences
 import tachiyomi.i18n.MR
 import java.io.File
 import java.util.Locale
@@ -83,6 +85,8 @@ class Downloader(
     private val getTracks: GetTracks,
     private val store: DownloadStore,
     private val notifier: DownloadNotifier,
+    private val translationPreferences: TranslationPreferences,
+    private val translationManagerProvider: () -> TranslationManager,
 ) {
     /**
      * Queue where active downloads are kept.
@@ -237,6 +241,11 @@ class Downloader(
 
             // Remove successful download from queue
             if (download.status == Download.State.DOWNLOADED) {
+                if (translationPreferences.autoTranslateAfterDownload.get()) {
+                    download.chapter.chapter?.let { chapter ->
+                        translationManagerProvider().startTranslation(download.manga, chapter)
+                    }
+                }
                 removeFromQueue(download)
             }
             if (areAllDownloadsFinished()) {

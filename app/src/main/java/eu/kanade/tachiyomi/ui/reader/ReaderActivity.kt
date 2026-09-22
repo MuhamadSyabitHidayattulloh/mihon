@@ -461,6 +461,7 @@ class ReaderActivity : BaseActivity() {
         )
         val verticalNavigatorOnLeft by readerPreferences.verticalNavigatorOnLeft.collectAsState()
         val verticalNavigatorHeight by readerPreferences.verticalNavigatorHeight.collectAsState()
+        val showTranslation by readerPreferences.showTranslation.collectAsState()
 
         ReaderAppBars(
             visible = state.menuVisible,
@@ -518,6 +519,14 @@ class ReaderActivity : BaseActivity() {
                 menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
             },
             onClickSettings = viewModel::openSettingsDialog,
+            showTranslation = showTranslation,
+            onClickTranslation = {
+                val enabled = !showTranslation
+                readerPreferences.showTranslation.set(enabled)
+                menuToggleToast?.cancel()
+                menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
+                viewModel.reloadCurrentChapter()
+            },
         )
     }
 

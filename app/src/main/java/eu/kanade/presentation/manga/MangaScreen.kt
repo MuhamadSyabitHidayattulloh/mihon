@@ -47,6 +47,7 @@ import androidx.compose.ui.util.fastMap
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterHeader
+import eu.kanade.presentation.manga.components.ChapterTranslationAction
 import eu.kanade.presentation.manga.components.ExpandableMangaDescription
 import eu.kanade.presentation.manga.components.MangaActionRow
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
@@ -56,6 +57,7 @@ import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
+import eu.kanade.tachiyomi.data.translation.TranslationProgressState
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
@@ -125,6 +127,11 @@ fun MangaScreen(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+
+    // Translation
+    onTranslationAction: ((ChapterList.Item, ChapterTranslationAction) -> Unit)? = null,
+    onHasTranslation: ((Chapter) -> Boolean)? = null,
+    onGetTranslationState: ((Long) -> TranslationProgressState)? = null,
 ) {
     val context = LocalContext.current
     val onCopyTagToClipboard: (tag: String) -> Unit = {
@@ -168,6 +175,9 @@ fun MangaScreen(
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
+            onTranslationAction = onTranslationAction,
+            onHasTranslation = onHasTranslation,
+            onGetTranslationState = onGetTranslationState,
         )
     } else {
         MangaScreenLargeImpl(
@@ -256,6 +266,16 @@ private fun MangaScreenSmallImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+
+    // Translation
+    onTranslationAction: (
+        (
+            ChapterList.Item,
+            eu.kanade.presentation.manga.components.ChapterTranslationAction,
+        ) -> Unit
+    )? = null,
+    onHasTranslation: ((Chapter) -> Boolean)? = null,
+    onGetTranslationState: ((Long) -> eu.kanade.tachiyomi.data.translation.TranslationProgressState)? = null,
 ) {
     val chapterListState = rememberLazyListState()
 
@@ -443,6 +463,9 @@ private fun MangaScreenSmallImpl(
                         onDownloadChapter = onDownloadChapter,
                         onChapterSelected = onChapterSelected,
                         onChapterSwipe = onChapterSwipe,
+                        onTranslationAction = onTranslationAction,
+                        onHasTranslation = onHasTranslation,
+                        onGetTranslationState = onGetTranslationState,
                     )
                 }
             }
@@ -498,6 +521,11 @@ fun MangaScreenLargeImpl(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
+
+    // Translation
+    onTranslationAction: ((ChapterList.Item, ChapterTranslationAction) -> Unit)? = null,
+    onHasTranslation: ((Chapter) -> Boolean)? = null,
+    onGetTranslationState: ((Long) -> TranslationProgressState)? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -680,6 +708,9 @@ fun MangaScreenLargeImpl(
                                 onDownloadChapter = onDownloadChapter,
                                 onChapterSelected = onChapterSelected,
                                 onChapterSwipe = onChapterSwipe,
+                                onTranslationAction = onTranslationAction,
+                                onHasTranslation = onHasTranslation,
+                                onGetTranslationState = onGetTranslationState,
                             )
                         }
                     }
@@ -741,6 +772,9 @@ private fun LazyListScope.sharedChapterItems(
     onDownloadChapter: ((List<ChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onTranslationAction: ((ChapterList.Item, ChapterTranslationAction) -> Unit)? = null,
+    onHasTranslation: ((Chapter) -> Boolean)? = null,
+    onGetTranslationState: ((Long) -> TranslationProgressState)? = null,
 ) {
     items(
         items = chapters,
@@ -806,6 +840,12 @@ private fun LazyListScope.sharedChapterItems(
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
                     },
+                    translationStateProvider = {
+                        onGetTranslationState?.invoke(item.chapter.id)
+                            ?: TranslationProgressState(item.chapter.id)
+                    },
+                    hasTranslationProvider = { onHasTranslation?.invoke(item.chapter) ?: false },
+                    onTranslationAction = { action -> onTranslationAction?.invoke(item, action) },
                 )
             }
         }

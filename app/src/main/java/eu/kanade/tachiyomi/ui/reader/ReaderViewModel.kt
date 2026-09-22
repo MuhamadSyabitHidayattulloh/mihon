@@ -770,6 +770,15 @@ class ReaderViewModel(
         }
     }
 
+    fun reloadCurrentChapter() {
+        val currentChapter = getCurrentChapter() ?: return
+        val loader = loader ?: return
+        viewModelScope.launchIO {
+            currentChapter.state = ReaderChapter.State.Wait
+            loadChapter(loader, currentChapter)
+        }
+    }
+
     fun toggleCropBorders(): Boolean {
         val isPagerType = ReadingMode.isPagerType(getMangaReadingMode())
         return if (isPagerType) {

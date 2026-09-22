@@ -40,6 +40,8 @@ import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.data.translation.TranslationManager
+import eu.kanade.tachiyomi.data.translation.TranslationProgressState
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
@@ -123,7 +125,27 @@ class MangaViewModel(
     private val sourceManager: SourceManager,
     private val refreshTracks: RefreshTracks,
     private val coverCache: CoverCache,
+    val translationManager: TranslationManager,
 ) : ViewModel() {
+
+    fun startTranslation(chapter: Chapter) {
+        val manga = successState?.manga ?: return
+        translationManager.startTranslation(manga, chapter)
+    }
+
+    fun deleteTranslation(chapter: Chapter) {
+        val manga = successState?.manga ?: return
+        translationManager.deleteTranslation(manga, chapter)
+    }
+
+    fun hasTranslation(chapter: Chapter): Boolean {
+        val manga = successState?.manga ?: return false
+        return translationManager.hasTranslation(manga, chapter)
+    }
+
+    fun getTranslationState(chapterId: Long): TranslationProgressState {
+        return translationManager.getTranslationState(chapterId)
+    }
 
     val state: StateFlow<MangaViewModel.State>
         field = MutableStateFlow<MangaViewModel.State>(State.Loading)
