@@ -80,32 +80,30 @@ class TextOcr {
                 )
 
                 val results = session.run(mapOf(session.inputNames.first() to inputTensor))
-                val outputTensor = results.firstOrNull()?.value as? OnnxTensor
                 val recognizedChars = StringBuilder()
 
-                if (outputTensor != null) {
-                    val outBuffer = outputTensor.floatBuffer
-                    var lastIdx = -1
-                    val numClasses = alphabet.length + 1
-                    val steps = outBuffer.capacity() / numClasses
-
-                    for (s in 0 until steps) {
-                        var maxVal = -Float.MAX_VALUE
-                        var maxIdx = 0
-                        for (c in 0 until numClasses) {
-                            val idx = s * numClasses + c
-                            if (idx < outBuffer.capacity()) {
-                                val v = outBuffer.get(idx)
-                                if (v > maxVal) {
-                                    maxVal = v
+                if (results.size() > 0) {
+                    val outputValue = results.get(0)
+                    if (outputValue is OnnxTensor) {
+                        val outFloatBuffer = outputValue.floatBuffer
+                        val totalCapacity = outFloatBuffer.capacity()
+                        var idx = 0
+                        while (idx < totalCapacity) {
+                            var maxIdx = 0
+                            var maxVal = Float.NEGATIVE_INFINITY
+                            val stepSize = (alphabet.length + 1).coerceAtMost(totalCapacity - idx)
+                            for (c in 0 until stepSize) {
+                                val valAt = outFloatBuffer.get(idx + c)
+                                if (valAt > maxVal) {
+                                    maxVal = valAt
                                     maxIdx = c
                                 }
                             }
+                            if (maxIdx > 0 && maxIdx <= alphabet.length) {
+                                recognizedChars.append(alphabet[maxIdx - 1])
+                            }
+                            idx += stepSize.coerceAtLeast(1)
                         }
-                        if (maxIdx > 0 && maxIdx != lastIdx && maxIdx <= alphabet.length) {
-                            recognizedChars.append(alphabet[maxIdx - 1])
-                        }
-                        lastIdx = maxIdx
                     }
                 }
 

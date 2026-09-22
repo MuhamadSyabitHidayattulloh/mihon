@@ -67,36 +67,41 @@ class ImageCleaner {
             )
 
             val results = session.run(mapOf(session.inputNames.first() to inputTensor))
-            val outputTensor = results.firstOrNull()?.value as? OnnxTensor
+            var inpaintedBitmap: Bitmap? = null
 
-            if (outputTensor != null) {
-                val outBuffer = outputTensor.floatBuffer
-                val pixelCount = width * height
-                val outPixels = IntArray(pixelCount)
+            if (results.size() > 0) {
+                val outputValue = results.get(0)
+                if (outputValue is OnnxTensor) {
+                    val outBuffer = outputValue.floatBuffer
+                    val pixelCount = width * height
+                    val outPixels = IntArray(pixelCount)
 
-                for (i in 0 until pixelCount) {
-                    if (outBuffer.hasRemaining()) {
-                        val r = (outBuffer.get(i) * 255.0f).coerceIn(0f, 255f).toInt()
-                        val g = (outBuffer.get((pixelCount + i).coerceAtMost(outBuffer.capacity() - 1)) * 255.0f)
-                            .coerceIn(0f, 255f).toInt()
-                        val b = (outBuffer.get((2 * pixelCount + i).coerceAtMost(outBuffer.capacity() - 1)) * 255.0f)
-                            .coerceIn(0f, 255f).toInt()
-                        outPixels[i] = Color.rgb(r, g, b)
-                    } else {
-                        outPixels[i] = pixels[i]
+                    for (i in 0 until pixelCount) {
+                        if (i < outBuffer.capacity()) {
+                            val r = (outBuffer.get(i) * 255.0f).coerceIn(0f, 255f).toInt()
+                            val g = (outBuffer.get((pixelCount + i).coerceAtMost(outBuffer.capacity() - 1)) * 255.0f)
+                                .coerceIn(0f, 255f).toInt()
+                            val b = (
+                                outBuffer.get(
+                                    (2 * pixelCount + i).coerceAtMost(outBuffer.capacity() - 1),
+                                ) * 255.0f
+                                )
+                                .coerceIn(0f, 255f).toInt()
+                            outPixels[i] = Color.rgb(r, g, b)
+                        } else {
+                            outPixels[i] = pixels[i]
+                        }
                     }
-                }
 
-                val inpaintedBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                inpaintedBitmap.setPixels(outPixels, 0, width, 0, 0, width, height)
-                inputTensor.close()
-                results.close()
-                return inpaintedBitmap
+                    inpaintedBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                    inpaintedBitmap.setPixels(outPixels, 0, width, 0, 0, width, height)
+                }
             }
 
             inputTensor.close()
             results.close()
-            return cleanWithInpainting(bitmap, textBlocks)
+
+            return inpaintedBitmap ?: cleanWithInpainting(bitmap, textBlocks)
         } finally {
             session.close()
         }

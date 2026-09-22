@@ -57,34 +57,36 @@ class TextDetector {
             )
 
             val results = session.run(mapOf(session.inputNames.first() to inputTensor))
-            val outputTensor = results.firstOrNull()?.value as? OnnxTensor
             val detectedBlocks = mutableListOf<DetectedBlock>()
 
-            if (outputTensor != null) {
-                val floatBuffer = outputTensor.floatBuffer
-                val scaleX = bitmap.width.toFloat() / targetWidth
-                val scaleY = bitmap.height.toFloat() / targetHeight
+            if (results.size() > 0) {
+                val outputValue = results.get(0)
+                if (outputValue is OnnxTensor) {
+                    val outFloatBuffer = outputValue.floatBuffer
+                    val scaleX = bitmap.width.toFloat() / targetWidth
+                    val scaleY = bitmap.height.toFloat() / targetHeight
 
-                val elementCount = floatBuffer.capacity()
-                val stride = 6
-                val numBoxes = elementCount / stride
+                    val elementCount = outFloatBuffer.capacity()
+                    val stride = 6
+                    val numBoxes = elementCount / stride
 
-                for (i in 0 until numBoxes) {
-                    val idx = i * stride
-                    if (idx + 4 < elementCount) {
-                        val x1 = floatBuffer.get(idx) * scaleX
-                        val y1 = floatBuffer.get(idx + 1) * scaleY
-                        val x2 = floatBuffer.get(idx + 2) * scaleX
-                        val y2 = floatBuffer.get(idx + 3) * scaleY
-                        val conf = floatBuffer.get(idx + 4)
+                    for (i in 0 until numBoxes) {
+                        val idx = i * stride
+                        if (idx + 4 < elementCount) {
+                            val x1 = outFloatBuffer.get(idx) * scaleX
+                            val y1 = outFloatBuffer.get(idx + 1) * scaleY
+                            val x2 = outFloatBuffer.get(idx + 2) * scaleX
+                            val y2 = outFloatBuffer.get(idx + 3) * scaleY
+                            val conf = outFloatBuffer.get(idx + 4)
 
-                        if (conf > 0.30f && (x2 - x1) > 10 && (y2 - y1) > 10) {
-                            detectedBlocks.add(
-                                DetectedBlock(
-                                    boundingBox = RectF(x1, y1, x2, y2),
-                                    confidence = conf,
-                                ),
-                            )
+                            if (conf > 0.30f && (x2 - x1) > 10 && (y2 - y1) > 10) {
+                                detectedBlocks.add(
+                                    DetectedBlock(
+                                        boundingBox = RectF(x1, y1, x2, y2),
+                                        confidence = conf,
+                                    ),
+                                )
+                            }
                         }
                     }
                 }

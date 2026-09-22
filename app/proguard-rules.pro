@@ -99,3 +99,8 @@
     public <init>();
     public void destroy();
 }
+
+# ONNX Runtime JNI
+-keep class ai.onnxruntime.** { *; }
+-keepclassmembers class ai.onnxruntime.** { *; }
+-dontwarn ai.onnxruntime.**
