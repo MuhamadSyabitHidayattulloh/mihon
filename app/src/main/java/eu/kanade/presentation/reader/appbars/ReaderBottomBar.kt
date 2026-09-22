@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
+import mihon.icons.materialsymbols.rounded.Translate
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -50,7 +51,7 @@ fun ReaderBottomBar(
 
         IconButton(onClick = { /* Toggle Translation Mode in Reader */ }) {
             Icon(
-                imageVector = mihon.icons.materialsymbols.MaterialSymbols.Rounded.Translate,
+                imageVector = MaterialSymbols.Rounded.Translate,
                 contentDescription = "Toggle Translation Redraw/Original",
             )
         }

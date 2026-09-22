@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.core.archive.ZipWriter
 import nl.adaptivity.xmlutil.serialization.XML
 import okhttp3.Response
@@ -734,7 +735,7 @@ class Downloader(
     }
 
     private fun checkAutoTranslate(download: Download) {
-        val appGraph = (context.applicationContext as? eu.kanade.tachiyomi.App)?.appGraph ?: return
+        val appGraph = context.appGraph
         if (appGraph.translationPreferences.autoTranslateAfterDownload.get()) {
             appGraph.translationManager.translateChapter(download.manga, download.chapter)
         }
