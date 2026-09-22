@@ -75,7 +75,7 @@ class MlKitTranslationEngine : TranslationEngine {
             "vi" -> TranslateLanguage.VIETNAMESE
             "th" -> TranslateLanguage.THAI
             "ar" -> TranslateLanguage.ARABIC
-            else -> TranslateLanguage.fromLanguageCode(code) ?: TranslateLanguage.ENGLISH
+            else -> TranslateLanguage.ENGLISH
         }
     }
 }
