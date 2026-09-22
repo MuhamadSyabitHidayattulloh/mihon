@@ -27,13 +27,25 @@ class TranslationModelManager(
         get() = File(context.filesDir, "translation_fonts").apply { if (!exists()) mkdirs() }
 
     val detectorModelFile: File
-        get() = File(modelsDir, "detector-v4-s_int8.onnx")
+        get() {
+            val file = File(modelsDir, "detector-v4-s_int8.onnx")
+            if (!file.exists()) extractAssetIfAvailable("translation_models/detector-v4-s_int8.onnx", file)
+            return file
+        }
 
     val ocrModelFile: File
-        get() = File(modelsDir, "PP-OCRv6_small_rec.onnx")
+        get() {
+            val file = File(modelsDir, "PP-OCRv6_small_rec.onnx")
+            if (!file.exists()) extractAssetIfAvailable("translation_models/PP-OCRv6_small_rec.onnx", file)
+            return file
+        }
 
     val inpaintingModelFile: File
-        get() = File(modelsDir, "aot.onnx")
+        get() {
+            val file = File(modelsDir, "aot.onnx")
+            if (!file.exists()) extractAssetIfAvailable("translation_models/aot.onnx", file)
+            return file
+        }
 
     fun isDetectorDownloaded(): Boolean = detectorModelFile.exists() && detectorModelFile.length() > 0
     fun isOcrDownloaded(): Boolean = ocrModelFile.exists() && ocrModelFile.length() > 0
@@ -50,12 +62,28 @@ class TranslationModelManager(
             TranslationPreferences.FONT_COMIC_NEUE -> "ComicNeue.ttf"
             else -> "AnimeAce.ttf"
         }
-        return File(fontsDir, fileName)
+        val file = File(fontsDir, fileName)
+        if (!file.exists()) {
+            extractAssetIfAvailable("translation_fonts/$fileName", file)
+        }
+        return file
     }
 
     fun isFontDownloaded(fontName: String): Boolean {
         val file = getFontFile(fontName)
         return file.exists() && file.length() > 0
+    }
+
+    private fun extractAssetIfAvailable(assetPath: String, targetFile: File) {
+        try {
+            context.assets.open(assetPath).use { input ->
+                targetFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+        } catch (_: Exception) {
+            // Asset not found in APK, fallback to network download or placeholder
+        }
     }
 
     fun downloadModel(url: String, fileName: String) {

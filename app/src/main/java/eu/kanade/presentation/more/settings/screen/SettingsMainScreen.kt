@@ -198,14 +198,9 @@ object SettingsMainScreen : Screen() {
         ),
         Item(
             titleRes = MR.strings.pref_category_downloads,
-            formatSubtitle = { "Chapter Translation, Fonts & ONNX Models" },
+            formatSubtitle = { "Chapter Translation & Fonts" },
             icon = MaterialSymbols.Rounded.Public,
-            screen = SettingsTranslationScreen(
-                translationPreferences = uy.kohesive.injekt
-                    .injectLazy<tachiyomi.domain.translation.service.TranslationPreferences>().value,
-                modelManager = uy.kohesive.injekt
-                    .injectLazy<eu.kanade.tachiyomi.data.translation.TranslationModelManager>().value,
-            ),
+            screen = SettingsTranslationScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_tracking,

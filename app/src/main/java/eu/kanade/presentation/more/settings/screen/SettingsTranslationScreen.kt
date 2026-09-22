@@ -4,20 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.SingleIn
+import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.tachiyomi.data.translation.TranslationModelManager
+import mihon.app.di.appGraph
 import tachiyomi.domain.translation.service.TranslationPreferences
 import tachiyomi.presentation.core.util.collectAsState
 
-@Inject
-@SingleIn(AppScope::class)
-class SettingsTranslationScreen(
-    private val translationPreferences: TranslationPreferences,
-    private val modelManager: TranslationModelManager,
-) : SearchableSettings {
+object SettingsTranslationScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
@@ -25,6 +18,9 @@ class SettingsTranslationScreen(
 
     @Composable
     override fun getPreferences(): List<Preference> {
+        val context = LocalContext.current
+        val translationPreferences = remember { context.appGraph.translationPreferences }
+
         val readerFontPref = translationPreferences.readerFont
         val translateFromPref = translationPreferences.translateFrom
         val translateToPref = translationPreferences.translateTo
@@ -52,13 +48,6 @@ class SettingsTranslationScreen(
                             TranslationPreferences.FONT_BANGERS to "Bangers",
                             TranslationPreferences.FONT_COMIC_NEUE to "Comic Neue",
                         ),
-                    ),
-                    Preference.PreferenceItem.TextPreference(
-                        title = "Download Font",
-                        subtitle = "Download chosen comic font",
-                        onClick = {
-                            modelManager.downloadFont(readerFontPref.get())
-                        },
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = translateFromPref,
@@ -140,53 +129,6 @@ class SettingsTranslationScreen(
                         )
                     }
                 },
-            ),
-            Preference.PreferenceGroup(
-                title = "ONNX Machine Learning Models",
-                preferenceItems = listOf(
-                    Preference.PreferenceItem.TextPreference(
-                        title = "Download Text Detector Model",
-                        subtitle = if (modelManager.isDetectorDownloaded()) {
-                            "Downloaded"
-                        } else {
-                            "Click to download detector-v4-s_int8.onnx"
-                        },
-                        onClick = {
-                            modelManager.downloadModel(
-                                TranslationModelManager.DETECTOR_URL,
-                                "detector-v4-s_int8.onnx",
-                            )
-                        },
-                    ),
-                    Preference.PreferenceItem.TextPreference(
-                        title = "Download OCR Model",
-                        subtitle = if (modelManager.isOcrDownloaded()) {
-                            "Downloaded"
-                        } else {
-                            "Click to download PP-OCRv6_small_rec.onnx"
-                        },
-                        onClick = {
-                            modelManager.downloadModel(
-                                TranslationModelManager.OCR_URL,
-                                "PP-OCRv6_small_rec.onnx",
-                            )
-                        },
-                    ),
-                    Preference.PreferenceItem.TextPreference(
-                        title = "Download Inpainting Model",
-                        subtitle = if (modelManager.isInpaintingDownloaded()) {
-                            "Downloaded"
-                        } else {
-                            "Click to download aot.onnx"
-                        },
-                        onClick = {
-                            modelManager.downloadModel(
-                                TranslationModelManager.INPAINTING_URL,
-                                "aot.onnx",
-                            )
-                        },
-                    ),
-                ),
             ),
         )
     }
