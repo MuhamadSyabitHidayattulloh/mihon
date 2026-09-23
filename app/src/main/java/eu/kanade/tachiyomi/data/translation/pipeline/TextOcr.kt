@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.translation.pipeline
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.RectF
@@ -10,9 +11,24 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class TextOcr {
+class TextOcr(private val context: Context? = null) {
 
-    private val alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!?,.:;-'\" "
+    private val dictionary: List<String> by lazy {
+        loadDictionary()
+    }
+
+    private fun loadDictionary(): List<String> {
+        if (context != null) {
+            try {
+                context.assets.open("translation_models/ppocr_keys_v6.txt").use { inputStream ->
+                    return inputStream.bufferedReader().readLines()
+                }
+            } catch (_: Throwable) {
+            }
+        }
+        val defaultAlphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!?,.:;-'\" "
+        return defaultAlphabet.map { it.toString() }
+    }
 
     fun recognize(
         bitmap: Bitmap,
@@ -49,6 +65,7 @@ class TextOcr {
     ): List<TextBlock> {
         val env = OrtEnvironment.getEnvironment()
         val resultBlocks = mutableListOf<TextBlock>()
+        val dict = dictionary
 
         for (block in detectedBlocks) {
             val box = block.boundingBox
@@ -99,11 +116,19 @@ class TextOcr {
                     if (res.size() > 0) {
                         val outputValue = res.get(0)
                         if (outputValue is OnnxTensor) {
+                            val shape = outputValue.info.shape
                             val outFloatBuffer = outputValue.floatBuffer
                             val totalCapacity = outFloatBuffer.capacity()
 
-                            val numClasses = alphabet.length + 1
-                            val numSteps = totalCapacity / numClasses
+                            val (numSteps, numClasses) = when {
+                                shape.size == 3 -> shape[1].toInt() to shape[2].toInt()
+                                shape.size == 2 -> shape[0].toInt() to shape[1].toInt()
+                                dict.isNotEmpty() -> {
+                                    val classes = dict.size + 1
+                                    (totalCapacity / classes) to classes
+                                }
+                                else -> 0 to 0
+                            }
 
                             var prevClassIdx = -1
                             if (numSteps > 0 && numClasses > 1) {
@@ -111,16 +136,21 @@ class TextOcr {
                                     var maxIdx = 0
                                     var maxVal = Float.NEGATIVE_INFINITY
                                     for (c in 0 until numClasses) {
-                                        val valAt = outFloatBuffer.get(step * numClasses + c)
-                                        if (valAt > maxVal) {
-                                            maxVal = valAt
-                                            maxIdx = c
+                                        val idx = step * numClasses + c
+                                        if (idx < totalCapacity) {
+                                            val valAt = outFloatBuffer.get(idx)
+                                            if (valAt > maxVal) {
+                                                maxVal = valAt
+                                                maxIdx = c
+                                            }
                                         }
                                     }
                                     // CTC Decoding logic: 0 is blank class, merge repeating tokens
                                     if (maxIdx != 0 && maxIdx != prevClassIdx) {
-                                        if (maxIdx - 1 in alphabet.indices) {
-                                            recognizedChars.append(alphabet[maxIdx - 1])
+                                        if (maxIdx - 1 in dict.indices) {
+                                            recognizedChars.append(dict[maxIdx - 1])
+                                        } else if (maxIdx == dict.size + 1) {
+                                            recognizedChars.append(" ")
                                         }
                                     }
                                     prevClassIdx = maxIdx

@@ -88,7 +88,7 @@ class TranslationManager(
     val progresses: StateFlow<Map<Long, TranslationProgress>> = _progresses.asStateFlow()
 
     private val textDetector = TextDetector()
-    private val textOcr = TextOcr()
+    private val textOcr = TextOcr(context)
     private val imageCleaner = ImageCleaner()
     private val canvasRenderer = CanvasRenderer()
 
