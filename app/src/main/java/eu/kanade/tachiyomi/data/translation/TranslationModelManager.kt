@@ -7,12 +7,12 @@ import com.google.mlkit.nl.translate.TranslateRemoteModel
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import tachiyomi.domain.translation.service.TranslationPreferences
 import java.io.File
@@ -22,9 +22,11 @@ import java.io.FileOutputStream
 @SingleIn(AppScope::class)
 class TranslationModelManager(
     private val context: Context,
-    private val networkClient: OkHttpClient,
+    private val networkHelper: NetworkHelper,
     private val translationPreferences: TranslationPreferences,
 ) {
+    private val networkClient by lazy { networkHelper.client }
+
     enum class ModelType(
         val filename: String,
         val url: String,
