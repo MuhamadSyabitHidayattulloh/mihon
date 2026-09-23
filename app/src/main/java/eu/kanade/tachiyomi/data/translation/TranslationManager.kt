@@ -219,7 +219,10 @@ class TranslationManager(
         val inpaintingModelFile = modelManager.getModelFile(TranslationModelManager.KEY_INPAINTING)
 
         if (detectorModelFile == null || ocrModelFile == null || inpaintingModelFile == null) {
-            log(chapterId, "Error: ONNX translation models are missing. Please download models in Settings > Translation.")
+            log(
+                chapterId,
+                "Error: ONNX translation models are missing. Please download models in Settings > Translation.",
+            )
             _chapterStates.update { it + (chapterId to TranslationState.ERROR) }
             return
         }
