@@ -159,6 +159,7 @@ class MangaScreen(
             onMarkPreviousAsReadClicked = viewModel::markPreviousChapterRead,
             onMultiDeleteClicked = viewModel::showDeleteChapterDialog,
             onChapterSwipe = viewModel::chapterSwipe,
+            onTranslationClick = viewModel::runChapterTranslationActions,
             onChapterSelected = viewModel::toggleSelection,
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
@@ -268,6 +269,12 @@ class MangaScreen(
                     onDismissRequest = onDismissRequest,
                     onValueChanged = { interval: Int -> viewModel.setFetchInterval(dialog.manga, interval) }
                         .takeIf { viewModel.isUpdateIntervalEnabled },
+                )
+            }
+            is MangaViewModel.Dialog.TranslationProgressDialog -> {
+                eu.kanade.presentation.manga.components.TranslationProgressDialog(
+                    progress = dialog.progress,
+                    onDismissRequest = onDismissRequest,
                 )
             }
         }

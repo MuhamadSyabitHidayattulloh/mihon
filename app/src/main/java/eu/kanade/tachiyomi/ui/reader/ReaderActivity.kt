@@ -462,6 +462,9 @@ class ReaderActivity : BaseActivity() {
         val verticalNavigatorOnLeft by readerPreferences.verticalNavigatorOnLeft.collectAsState()
         val verticalNavigatorHeight by readerPreferences.verticalNavigatorHeight.collectAsState()
 
+        val translationPreferences = remember { graph.translationPreferences }
+        val showTranslated by translationPreferences.showTranslated.collectAsState()
+
         ReaderAppBars(
             visible = state.menuVisible,
 
@@ -516,6 +519,12 @@ class ReaderActivity : BaseActivity() {
                 val enabled = viewModel.toggleCropBorders()
                 menuToggleToast?.cancel()
                 menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
+            },
+            showTranslated = showTranslated,
+            onClickToggleTranslation = {
+                val newValue = !showTranslated
+                translationPreferences.showTranslated.set(newValue)
+                viewModel.state.value.viewerChapters?.let(::setChapters)
             },
             onClickSettings = viewModel::openSettingsDialog,
         )

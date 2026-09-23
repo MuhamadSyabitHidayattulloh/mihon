@@ -83,6 +83,8 @@ class Downloader(
     private val getTracks: GetTracks,
     private val store: DownloadStore,
     private val notifier: DownloadNotifier,
+    private val translationPreferences: tachiyomi.domain.translation.service.TranslationPreferences,
+    private val translationManagerProvider: () -> eu.kanade.tachiyomi.data.translation.TranslationManager,
 ) {
     /**
      * Queue where active downloads are kept.
@@ -406,6 +408,10 @@ class Downloader(
             DiskUtil.createNoMediaFile(tmpDir, context)
 
             download.status = Download.State.DOWNLOADED
+
+            if (translationPreferences.autoTranslateAfterDownload.get()) {
+                translationManagerProvider().startTranslation(download.chapter, download.manga)
+            }
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
             // If the page list threw, it will resume here

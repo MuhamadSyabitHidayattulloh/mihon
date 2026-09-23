@@ -121,6 +121,10 @@ fun MangaScreen(
     // For chapter swipe
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
 
+    onTranslationClick: (
+        (List<ChapterList.Item>, eu.kanade.presentation.manga.components.ChapterTranslationAction) -> Unit
+    )? = null,
+
     // Chapter selection
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onAllChapterSelected: (Boolean) -> Unit,
@@ -165,6 +169,7 @@ fun MangaScreen(
             onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
             onChapterSwipe = onChapterSwipe,
+            onTranslationClick = onTranslationClick,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
@@ -251,6 +256,10 @@ private fun MangaScreenSmallImpl(
 
     // For chapter swipe
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+
+    onTranslationClick: (
+        (List<ChapterList.Item>, eu.kanade.presentation.manga.components.ChapterTranslationAction) -> Unit
+    )? = null,
 
     // Chapter selection
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
@@ -378,7 +387,7 @@ private fun MangaScreenSmallImpl(
                             isTabletUi = false,
                             appBarPadding = topPadding,
                             manga = state.manga,
-                            source = remember { state.source },
+                            sourceName = remember { state.source.getNameForMangaInfo() },
                             isStubSource = remember { state.source is StubSource },
                             onCoverClick = onCoverClicked,
                             doSearch = onSearch,
@@ -441,6 +450,7 @@ private fun MangaScreenSmallImpl(
                         chapterSwipeEndAction = chapterSwipeEndAction,
                         onChapterClicked = onChapterClicked,
                         onDownloadChapter = onDownloadChapter,
+                        onTranslationClick = onTranslationClick,
                         onChapterSelected = onChapterSelected,
                         onChapterSwipe = onChapterSwipe,
                     )
@@ -493,6 +503,10 @@ fun MangaScreenLargeImpl(
 
     // For swipe actions
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+
+    onTranslationClick: (
+        (List<ChapterList.Item>, eu.kanade.presentation.manga.components.ChapterTranslationAction) -> Unit
+    )? = null,
 
     // Chapter selection
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
@@ -614,7 +628,7 @@ fun MangaScreenLargeImpl(
                             isTabletUi = true,
                             appBarPadding = contentPadding.calculateTopPadding(),
                             manga = state.manga,
-                            source = remember { state.source },
+                            sourceName = remember { state.source.getNameForMangaInfo() },
                             isStubSource = remember { state.source is StubSource },
                             onCoverClick = onCoverClicked,
                             doSearch = onSearch,
@@ -678,6 +692,7 @@ fun MangaScreenLargeImpl(
                                 chapterSwipeEndAction = chapterSwipeEndAction,
                                 onChapterClicked = onChapterClicked,
                                 onDownloadChapter = onDownloadChapter,
+                                onTranslationClick = onTranslationClick,
                                 onChapterSelected = onChapterSelected,
                                 onChapterSwipe = onChapterSwipe,
                             )
@@ -739,6 +754,9 @@ private fun LazyListScope.sharedChapterItems(
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     onChapterClicked: (Chapter) -> Unit,
     onDownloadChapter: ((List<ChapterList.Item>, ChapterDownloadAction) -> Unit)?,
+    onTranslationClick: (
+        (List<ChapterList.Item>, eu.kanade.presentation.manga.components.ChapterTranslationAction) -> Unit
+    )? = null,
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
 ) {
@@ -800,6 +818,13 @@ private fun LazyListScope.sharedChapterItems(
                     },
                     onDownloadClick = if (onDownloadChapter != null) {
                         { onDownloadChapter(listOf(item), it) }
+                    } else {
+                        null
+                    },
+                    translationStateProvider = { item.translationState },
+                    translationProgressProvider = { item.translationProgress },
+                    onTranslationClick = if (onTranslationClick != null) {
+                        { onTranslationClick(listOf(item), it) }
                     } else {
                         null
                     },

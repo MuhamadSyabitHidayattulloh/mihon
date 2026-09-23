@@ -319,6 +319,10 @@ dependencies {
     // Shizuku
     implementation(libs.bundles.shizuku)
 
+    // Machine Learning & Translation
+    implementation(libs.onnxruntime.android)
+    implementation(libs.mlkit.translate)
+
     // String similarity
     implementation(libs.stringSimilarity)
 

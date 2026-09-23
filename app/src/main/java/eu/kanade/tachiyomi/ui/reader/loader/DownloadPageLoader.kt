@@ -26,6 +26,8 @@ internal class DownloadPageLoader(
 ) : PageLoader() {
 
     private val context: Context by injectLazy()
+    private val translationPreferences: tachiyomi.domain.translation.service.TranslationPreferences by injectLazy()
+    private val translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager by injectLazy()
 
     private var archivePageLoader: ArchivePageLoader? = null
 
@@ -53,15 +55,41 @@ internal class DownloadPageLoader(
     }
 
     private suspend fun getPagesFromArchive(file: UniFile): List<ReaderPage> {
-        val loader = ArchivePageLoader(file.archiveReader(context)).also { archivePageLoader = it }
+        val translationsDir = translationManager.getTranslationsDir(file)
+        val loader = ArchivePageLoader(
+            reader = file.archiveReader(context),
+            translationsDir = translationsDir,
+            translationPreferences = translationPreferences,
+        ).also { archivePageLoader = it }
         return loader.getPages()
     }
 
     private fun getPagesFromDirectory(): List<ReaderPage> {
+        val dbChapter = chapter.chapter
+        val chapterDir = downloadProvider.findChapterDir(
+            dbChapter.name,
+            dbChapter.scanlator,
+            dbChapter.url,
+            manga.title,
+            source,
+        )
+        val translationsDir = chapterDir?.let { translationManager.getTranslationsDir(it) }
+
         val pages = downloadManager.buildPageList(source, manga, chapter.chapter.toDomainChapter()!!)
         return pages.map { page ->
+            val pageName = page.uri?.lastPathSegment?.substringAfterLast('/')
+            val translatedFile = if (!pageName.isNullOrBlank() && translationsDir != null) {
+                translationsDir.findFile(pageName)
+            } else {
+                null
+            }
+
             ReaderPage(page.index, page.url, page.imageUrl) {
-                context.contentResolver.openInputStream(page.uri ?: Uri.EMPTY)!!
+                if (translationPreferences.showTranslated.get() && translatedFile != null && translatedFile.exists()) {
+                    translatedFile.openInputStream()
+                } else {
+                    context.contentResolver.openInputStream(page.uri ?: Uri.EMPTY)!!
+                }
             }.apply {
                 status = Page.State.Ready
             }
