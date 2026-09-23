@@ -31,6 +31,9 @@ import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
+import java.io.File
+import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * This class is used to manage chapter downloads in the application. It must be instantiated once
@@ -41,7 +44,7 @@ import tachiyomi.i18n.MR
 @SingleIn(AppScope::class)
 class DownloadManager(
     private val context: Context,
-    private val provider: DownloadProvider,
+    val provider: DownloadProvider,
     private val cache: DownloadCache,
     private val getCategories: GetCategories,
     private val getManga: GetManga,
