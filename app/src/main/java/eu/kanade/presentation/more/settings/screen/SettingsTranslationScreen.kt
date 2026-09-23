@@ -38,10 +38,10 @@ object SettingsTranslationScreen : SearchableSettings {
         val ocrDownloaded by translationPreferences.ocrModelDownloaded.collectAsState()
         val inpaintingDownloaded by translationPreferences.inpaintingModelDownloaded.collectAsState()
 
-        var geminiApiKey by remember { mutableStateOf(translationPreferences.geminiApiKey.get()) }
-        var geminiModel by remember { mutableStateOf(translationPreferences.geminiModel.get()) }
-        var openRouterApiKey by remember { mutableStateOf(translationPreferences.openRouterApiKey.get()) }
-        var openRouterModel by remember { mutableStateOf(translationPreferences.openRouterModel.get()) }
+        val geminiApiKey by translationPreferences.geminiApiKey.collectAsState()
+        val geminiModel by translationPreferences.geminiModel.collectAsState()
+        val openRouterApiKey by translationPreferences.openRouterApiKey.collectAsState()
+        val openRouterModel by translationPreferences.openRouterModel.collectAsState()
 
         return listOf(
             Preference.PreferenceItem.SwitchPreference(

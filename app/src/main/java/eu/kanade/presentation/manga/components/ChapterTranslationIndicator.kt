@@ -5,7 +5,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -13,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +26,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.CheckCircle
+import mihon.icons.materialsymbols.rounded.Check
 import mihon.icons.materialsymbols.rounded.Error
 import mihon.icons.materialsymbols.rounded.Sync
 import tachiyomi.domain.translation.model.TranslationStatus
@@ -69,7 +69,7 @@ fun ChapterTranslationIndicator(
                             onClick = { onClick(status) },
                             role = Role.Button,
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = rememberRipple(bounded = false, radius = 20.dp),
+                            indication = ripple(bounded = false, radius = 20.dp),
                         ),
                 ) {
                     CircularProgressIndicator(
@@ -83,7 +83,7 @@ fun ChapterTranslationIndicator(
             TranslationStatus.TRANSLATED -> {
                 IconButton(onClick = { onClick(status) }) {
                     Icon(
-                        imageVector = MaterialSymbols.Rounded.CheckCircle,
+                        imageVector = MaterialSymbols.Rounded.Check,
                         contentDescription = stringResource(MR.strings.action_delete_translation),
                         tint = MaterialTheme.colorScheme.primary,
                     )

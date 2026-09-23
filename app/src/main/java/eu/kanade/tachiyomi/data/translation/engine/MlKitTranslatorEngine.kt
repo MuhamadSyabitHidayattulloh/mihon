@@ -4,8 +4,10 @@ import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.suspendCancellableCoroutine
 import tachiyomi.domain.translation.model.TranslationLanguage
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class MlKitTranslatorEngine : TranslationEngineProvider {
 
@@ -27,8 +29,16 @@ class MlKitTranslatorEngine : TranslationEngineProvider {
         val translator = Translation.getClient(options)
         return try {
             val conditions = DownloadConditions.Builder().build()
-            translator.downloadModelIfNeeded(conditions).await()
-            translator.translate(text).await()
+            suspendCancellableCoroutine { cont ->
+                translator.downloadModelIfNeeded(conditions)
+                    .addOnSuccessListener { cont.resume(Unit) }
+                    .addOnFailureListener { cont.resumeWithException(it) }
+            }
+            suspendCancellableCoroutine { cont ->
+                translator.translate(text)
+                    .addOnSuccessListener { cont.resume(it) }
+                    .addOnFailureListener { cont.resumeWithException(it) }
+            }
         } finally {
             translator.close()
         }

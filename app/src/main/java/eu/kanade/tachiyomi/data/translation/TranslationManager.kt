@@ -6,13 +6,13 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.download.DownloadProvider
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
@@ -39,17 +39,19 @@ class TranslationManager(
     private val _isProcessing = MutableStateFlow(false)
     val isProcessing: StateFlow<Boolean> = _isProcessing.asStateFlow()
 
-    fun isChapterTranslated(manga: Manga, chapter: Chapter): Boolean {
+    suspend fun isChapterTranslated(manga: Manga, chapter: Chapter): Boolean {
         val chapterDir = getTranslationChapterDir(manga, chapter) ?: return false
         return chapterDir.exists() && (chapterDir.listFiles()?.isNotEmpty() == true)
     }
 
-    fun getTranslationChapterDir(manga: Manga, chapter: Chapter): UniFile? {
+    suspend fun getTranslationChapterDir(manga: Manga, chapter: Chapter): UniFile? {
         val source = sourceManager.getOrStub(manga.source)
-        val translationsDir = storageManager.getTranslationsDirectory() ?: return false
-        val sourceDir = translationsDir.createDirectory(downloadProvider.getProviderDirName(source)) ?: return false
-        val mangaDir = sourceDir.createDirectory(downloadProvider.getMangaDirName(manga.title)) ?: return false
-        return mangaDir.createDirectory(downloadProvider.getChapterDirName(chapter.name, chapter.scanlator))
+        val translationsDir = storageManager.getTranslationsDirectory() ?: return null
+        val sourceDir = translationsDir.createDirectory(downloadProvider.getSourceDirName(source)) ?: return null
+        val mangaDir = sourceDir.createDirectory(downloadProvider.getMangaDirName(manga.title)) ?: return null
+        return mangaDir.createDirectory(
+            downloadProvider.getChapterDirName(chapter.name, chapter.scanlator, chapter.url),
+        )
     }
 
     fun enqueueChapter(manga: Manga, chapter: Chapter) {
@@ -60,7 +62,7 @@ class TranslationManager(
             chapterId = chapter.id,
             mangaTitle = manga.title,
             chapterName = chapter.name,
-            chapterNumber = chapter.chapterNumber,
+            chapterNumber = chapter.chapterNumber.toFloat(),
             status = TranslationStatus.QUEUED,
         )
 
@@ -69,8 +71,10 @@ class TranslationManager(
     }
 
     fun deleteTranslation(manga: Manga, chapter: Chapter) {
-        val chapterDir = getTranslationChapterDir(manga, chapter)
-        chapterDir?.delete()
+        scope.launch {
+            val chapterDir = getTranslationChapterDir(manga, chapter)
+            chapterDir?.delete()
+        }
         _queue.value = _queue.value.filterNot { it.chapterId == chapter.id }
     }
 
@@ -125,11 +129,13 @@ class TranslationManager(
 
             updateItemStatus(nextItem.chapterId, TranslationStatus.TRANSLATING)
 
+            val source = sourceManager.getOrStub(manga.source)
             val downloadDir = downloadProvider.findChapterDir(
                 chapter.name,
                 chapter.scanlator,
+                chapter.url,
                 manga.title,
-                sourceManager.getOrStub(manga.source),
+                source,
             )
             if (downloadDir == null || !downloadDir.exists()) {
                 updateItemStatus(
@@ -150,7 +156,9 @@ class TranslationManager(
                 continue
             }
 
-            val files = downloadDir.listFiles()?.filter { DiskUtil.isImage(it.name ?: "") } ?: emptyList()
+            val files = downloadDir.listFiles()?.filter { file ->
+                file.isFile && ImageUtil.isImage(file.name) { file.openInputStream() }
+            } ?: emptyList()
             if (files.isEmpty()) {
                 updateItemStatus(nextItem.chapterId, TranslationStatus.ERROR, error = "No images found in download")
                 continue
