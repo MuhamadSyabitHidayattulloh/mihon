@@ -16,10 +16,10 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.translation.TranslationModelManager
+import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
@@ -46,11 +46,12 @@ data class TextBlock(
 @SingleIn(AppScope::class)
 class TranslationEngine(
     private val context: Context,
-    private val networkClient: OkHttpClient,
+    private val networkHelper: NetworkHelper,
     private val modelManager: TranslationModelManager,
     private val translationPreferences: TranslationPreferences,
 ) {
     private val ortEnvironment by lazy { OrtEnvironment.getEnvironment() }
+    private val networkClient by lazy { networkHelper.client }
 
     suspend fun translateImage(
         bitmap: Bitmap,
