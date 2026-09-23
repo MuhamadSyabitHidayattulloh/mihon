@@ -895,4 +895,33 @@
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">Tutup</string>
     <string name="considering">Mempertimbangkan</string>
+
+    <!-- Translation strings -->
+    <string name="pref_category_translation">Terjemahan Chapter</string>
+    <string name="pref_translation_summary">Terjemahkan otomatis, model, dan bahasa</string>
+    <string name="pref_auto_translate">Terjemahkan setelah mengunduh chapter</string>
+    <string name="pref_auto_translate_summary">Terjemahkan chapter secara otomatis setelah terunduh</string>
+    <string name="pref_translate_source_lang">Terjemahkan dari</string>
+    <string name="pref_translate_target_lang">Terjemahkan ke</string>
+    <string name="pref_translator_type">Tipe penerjemah</string>
+    <string name="pref_translator_type_mlkit">ML-Kit Translate (Luring)</string>
+    <string name="pref_translator_type_google">Google Translate (Web)</string>
+    <string name="pref_translator_type_gemini">Gemini AI</string>
+    <string name="pref_translator_type_openrouter">OpenRouter</string>
+    <string name="pref_gemini_api_key">Kunci API Gemini</string>
+    <string name="pref_gemini_model">Model Gemini</string>
+    <string name="pref_openrouter_api_key">Kunci API OpenRouter</string>
+    <string name="pref_openrouter_model">Model OpenRouter</string>
+    <string name="pref_translation_models">Model Terjemahan</string>
+    <string name="action_retranslate">Terjemahkan ulang</string>
+    <string name="action_delete_translation">Hapus terjemahan</string>
+    <string name="translation_progress_title">Progres Terjemahan</string>
+    <string name="translation_stage_detection">Deteksi Teks &amp; OCR</string>
+    <string name="translation_stage_cleaning">Pembersihan</string>
+    <string name="translation_stage_translation">Penerjemahan</string>
+    <string name="translation_stage_rendering">Renderer Gambar</string>
+    <string name="translation_done">Selesai</string>
+    <string name="translation_queue">Antrean</string>
+    <string name="translation_failed">Gagal</string>
+    <string name="action_show_translation">Beralih terjemahan</string>
 </resources>

@@ -210,6 +210,7 @@
     <string name="pref_category_reader">Reader</string>
     <string name="pref_category_downloads">Downloads</string>
     <string name="pref_category_tracking">Tracking</string>
+    <string name="pref_category_translation">Chapter Translation</string>
     <string name="pref_category_advanced">Advanced</string>
     <string name="pref_category_about">About</string>
 
@@ -217,6 +218,7 @@
     <string name="pref_library_summary">Categories, global update, chapter swipe</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_downloads_summary">Automatic download, download ahead</string>
+    <string name="pref_translation_summary">Auto translation, models, and languages</string>
     <string name="pref_tracking_summary">One-way progress sync, enhanced sync</string>
     <string name="pref_browse_summary">Sources, extensions, global search</string>
     <string name="pref_backup_summary">Manual &amp; automatic backups, storage space</string>
@@ -1102,4 +1104,31 @@
     <string name="donationCampaign.paragraph3">Regardless, Mihon will continue to be maintained by me and the volunteers, and it will stay open source.</string>
     <string name="donationCampaign.contactPlatform">Discord</string>
     <string name="donationCampaign.dismiss">Dismiss</string>
+
+    <!-- Translation strings -->
+    <string name="pref_auto_translate">Auto-translate after downloading chapter</string>
+    <string name="pref_auto_translate_summary">Automatically translate chapters when they are downloaded</string>
+    <string name="pref_translate_source_lang">Translate from</string>
+    <string name="pref_translate_target_lang">Translate to</string>
+    <string name="pref_translator_type">Translator engine</string>
+    <string name="pref_translator_type_mlkit">ML-Kit Translate (Offline)</string>
+    <string name="pref_translator_type_google">Google Translate (Web)</string>
+    <string name="pref_translator_type_gemini">Gemini AI</string>
+    <string name="pref_translator_type_openrouter">OpenRouter</string>
+    <string name="pref_gemini_api_key">Gemini API Key</string>
+    <string name="pref_gemini_model">Gemini Model</string>
+    <string name="pref_openrouter_api_key">OpenRouter API Key</string>
+    <string name="pref_openrouter_model">OpenRouter Model</string>
+    <string name="pref_translation_models">Translation Models</string>
+    <string name="action_retranslate">Re-translate</string>
+    <string name="action_delete_translation">Delete translation</string>
+    <string name="translation_progress_title">Translation Progress</string>
+    <string name="translation_stage_detection">Detection &amp; OCR</string>
+    <string name="translation_stage_cleaning">Cleaning</string>
+    <string name="translation_stage_translation">Translation</string>
+    <string name="translation_stage_rendering">Renderer</string>
+    <string name="translation_done">Done</string>
+    <string name="translation_queue">Queue</string>
+    <string name="translation_failed">Failed</string>
+    <string name="action_show_translation">Toggle translation redraw</string>
 </resources>
