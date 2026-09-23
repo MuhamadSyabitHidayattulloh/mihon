@@ -123,6 +123,7 @@ class MangaViewModel(
     private val sourceManager: SourceManager,
     private val refreshTracks: RefreshTracks,
     private val coverCache: CoverCache,
+    val translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager,
 ) : ViewModel() {
 
     val state: StateFlow<MangaViewModel.State>
@@ -217,6 +218,32 @@ class MangaViewModel(
         }
 
         observeDownloads()
+
+        viewModelScope.launchIO {
+            combine(
+                translationManager.chapterStates,
+                translationManager.progresses,
+            ) { states, progresses -> states to progresses }
+                .collectLatest { (states, progresses) ->
+                    updateSuccessState { successState ->
+                        val newChapters = successState.chapters.map { item ->
+                            val state =
+                                states[item.id]
+                                    ?: translationManager.getTranslationState(item.id, item.chapter, successState.manga)
+                            val progress = progresses[item.id]
+                            item.copy(
+                                translationState = state,
+                                translationProgress = if (progress != null && progress.totalPages > 0) {
+                                    ((progress.donePages + progress.failedPages) * 100) / progress.totalPages
+                                } else {
+                                    0
+                                },
+                            )
+                        }
+                        successState.copy(chapters = newChapters)
+                    }
+                }
+        }
 
         viewModelScope.launchIO {
             val manga = getMangaAndChapters.awaitManga(mangaId)
@@ -1075,7 +1102,39 @@ class MangaViewModel(
         data class SetFetchInterval(val manga: Manga) : Dialog
         data object SettingsSheet : Dialog
         data object TrackSheet : Dialog
+        data class TranslationProgressDialog(
+            val progress: eu.kanade.tachiyomi.data.translation.TranslationProgress,
+        ) : Dialog
         data object FullCover : Dialog
+    }
+
+    fun runChapterTranslationActions(
+        items: List<ChapterList.Item>,
+        action: eu.kanade.presentation.manga.components.ChapterTranslationAction,
+    ) {
+        val manga = successState?.manga ?: return
+        viewModelScope.launchIO {
+            when (action) {
+                eu.kanade.presentation.manga.components.ChapterTranslationAction.START,
+                eu.kanade.presentation.manga.components.ChapterTranslationAction.RETRANSLATE,
+                -> {
+                    items.forEach { item ->
+                        translationManager.startTranslation(item.chapter, manga)
+                    }
+                }
+                eu.kanade.presentation.manga.components.ChapterTranslationAction.DELETE -> {
+                    items.forEach { item ->
+                        translationManager.deleteTranslation(item.chapter, manga)
+                    }
+                }
+                eu.kanade.presentation.manga.components.ChapterTranslationAction.SHOW_PROGRESS -> {
+                    val chapterId = items.firstOrNull()?.id ?: return@launchIO
+                    val progress = translationManager.progresses.value[chapterId]
+                        ?: eu.kanade.tachiyomi.data.translation.TranslationProgress(chapterId = chapterId)
+                    updateSuccessState { it.copy(dialog = Dialog.TranslationProgressDialog(progress)) }
+                }
+            }
+        }
     }
 
     fun dismissDialog() {
@@ -1206,6 +1265,9 @@ sealed class ChapterList {
         val downloadState: Download.State,
         val downloadProgress: Int,
         val selected: Boolean = false,
+        val translationState: eu.kanade.tachiyomi.data.translation.TranslationState =
+            eu.kanade.tachiyomi.data.translation.TranslationState.NOT_TRANSLATED,
+        val translationProgress: Int = 0,
     ) : ChapterList() {
         val id = chapter.id
         val isDownloaded = downloadState == Download.State.DOWNLOADED

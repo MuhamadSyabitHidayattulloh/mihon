@@ -32,6 +32,9 @@ class MetroInjektRegistrar(
 
         NetworkHelper::class.java to { graph.networkHelper },
         JavaScriptEngine::class.java to { graph.javaScriptEngine },
+        tachiyomi.domain.translation.service.TranslationPreferences::class.java to { graph.translationPreferences },
+        eu.kanade.tachiyomi.data.translation.TranslationModelManager::class.java to { graph.translationModelManager },
+        eu.kanade.tachiyomi.data.translation.TranslationManager::class.java to { graph.translationManager },
     )
 
     override fun <R : Any> getInstance(forType: Type): R = getInstanceOrNull(forType)
