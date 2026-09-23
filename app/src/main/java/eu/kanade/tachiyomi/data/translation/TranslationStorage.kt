@@ -119,14 +119,15 @@ class TranslationStorage(
         return if (file.name?.endsWith(".cbz", ignoreCase = true) == true) {
             try {
                 val tempZipFile = File(context.cacheDir, file.name!!)
-                if (!tempZipFile.exists()) {
-                    file.openInputStream().use { input ->
-                        FileOutputStream(tempZipFile).use { output -> input.copyTo(output) }
-                    }
+                file.openInputStream().use { input ->
+                    FileOutputStream(tempZipFile).use { output -> input.copyTo(output) }
                 }
-                val zip = ZipFile(tempZipFile)
-                val entry = zip.getEntry(fileName) ?: zip.getEntry(String.format("%03d.png", pageIndex + 1))
-                entry?.let { zip.getInputStream(it) }
+                val bytes = ZipFile(tempZipFile).use { zip ->
+                    val entry = zip.getEntry(fileName) ?: zip.getEntry(String.format("%03d.png", pageIndex + 1))
+                    entry?.let { zip.getInputStream(it).readBytes() }
+                }
+                tempZipFile.delete()
+                bytes?.let { java.io.ByteArrayInputStream(it) }
             } catch (e: Exception) {
                 null
             }

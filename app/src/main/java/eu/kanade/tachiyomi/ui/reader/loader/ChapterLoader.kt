@@ -4,6 +4,9 @@ import android.content.Context
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadProvider
+import eu.kanade.tachiyomi.data.translation.TranslationStorage
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -28,7 +31,13 @@ class ChapterLoader(
     private val chapterCache: ChapterCache,
     private val manga: Manga,
     private val source: Source,
+    private val translationStorage: TranslationStorage = Injekt.get(),
+    private var isTranslationMode: Boolean = false,
 ) {
+
+    fun setTranslationMode(enabled: Boolean) {
+        this.isTranslationMode = enabled
+    }
 
     /**
      * Assigns the chapter's page loader and loads the its pages. Returns immediately if the chapter
@@ -93,6 +102,8 @@ class ChapterLoader(
                 source,
                 downloadManager,
                 downloadProvider,
+                translationStorage,
+                isTranslationMode,
             )
             source is LocalSource -> source.getFormat(chapter.chapter).let { format ->
                 when (format) {

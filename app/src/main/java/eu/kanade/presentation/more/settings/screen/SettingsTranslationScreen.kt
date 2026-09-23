@@ -33,10 +33,7 @@ class SettingsTranslationScreen(
 ) : SearchableSettings {
 
     @Composable
-    override fun getTitleRes(): Int = 0
-
-    @Composable
-    fun getTitleString(): String = "Terjemahan"
+    override fun getTitleRes(): Int = tachiyomi.i18n.MR.strings.pref_category_downloads.resourceId
 
     @Composable
     override fun getPreferences(): List<Preference> {
