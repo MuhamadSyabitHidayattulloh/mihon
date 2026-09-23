@@ -97,6 +97,7 @@ interface AppGraph : ViewModelGraph {
     val crashLogUtil: CrashLogUtil
 
     val downloadManager: DownloadManager
+    val translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager
 
     val updateChecker: AppUpdateChecker
 

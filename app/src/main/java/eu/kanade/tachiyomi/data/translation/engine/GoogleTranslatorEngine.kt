@@ -14,8 +14,8 @@ class GoogleTranslatorEngine(
         text: String,
         sourceLang: TranslationLanguage,
         targetLang: TranslationLanguage,
-    ): String {
-        if (text.isBlank()) return text
+    ): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        if (text.isBlank()) return@withContext text
 
         val url = "https://translate.googleapis.com/translate_a/single".toHttpUrl().newBuilder()
             .addQueryParameter("client", "gtx")
@@ -31,7 +31,7 @@ class GoogleTranslatorEngine(
             .build()
 
         client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return text
+            if (!response.isSuccessful) return@withContext text
             val body = response.body.string()
             val jsonArray = JSONArray(body)
             val sentences = jsonArray.getJSONArray(0)
@@ -40,7 +40,7 @@ class GoogleTranslatorEngine(
                 val sentence = sentences.getJSONArray(i)
                 result.append(sentence.getString(0))
             }
-            return result.toString()
+            result.toString()
         }
     }
 }

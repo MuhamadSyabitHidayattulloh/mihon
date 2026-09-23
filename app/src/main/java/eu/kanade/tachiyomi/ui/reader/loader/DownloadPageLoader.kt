@@ -59,9 +59,31 @@ internal class DownloadPageLoader(
 
     private fun getPagesFromDirectory(): List<ReaderPage> {
         val pages = downloadManager.buildPageList(source, manga, chapter.chapter.toDomainChapter()!!)
+        val readerPreferences: eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences by injectLazy()
+        val storageManager: tachiyomi.domain.storage.service.StorageManager by injectLazy()
+        val isTranslationActive = readerPreferences.showTranslationMode.get()
+        val translationsDir = storageManager.getTranslationsDirectory()
+        val sourceDir = translationsDir?.findFile(downloadProvider.getSourceDirName(source))
+        val mangaDir = sourceDir?.findFile(downloadProvider.getMangaDirName(manga.title))
+        val transChapterDir = mangaDir?.findFile(
+            downloadProvider.getChapterDirName(chapter.chapter.name, chapter.chapter.scanlator, chapter.chapter.url),
+        )
+
         return pages.map { page ->
             ReaderPage(page.index, page.url, page.imageUrl) {
-                context.contentResolver.openInputStream(page.uri ?: Uri.EMPTY)!!
+                val origUri = page.uri ?: Uri.EMPTY
+                val pageFileName = origUri.lastPathSegment
+                val transFile = if (isTranslationActive && pageFileName != null && transChapterDir?.exists() == true) {
+                    transChapterDir.findFile(pageFileName)
+                } else {
+                    null
+                }
+
+                if (transFile != null && transFile.exists()) {
+                    transFile.openInputStream()
+                } else {
+                    context.contentResolver.openInputStream(origUri)!!
+                }
             }.apply {
                 status = Page.State.Ready
             }

@@ -102,12 +102,22 @@ class AotInpainter(
                 sess.inputNames.elementAt(1) to maskTensor,
             )
             sess.run(inputs).use { result ->
-                val outTensor = result.get(0).value as Array<Array<FloatArray>>
-                val outPixels = IntArray(size * size)
-                for (i in 0 until size * size) {
-                    val r = (outTensor[0][0][i].coerceIn(0f, 1f) * 255).toInt()
-                    val g = (outTensor[0][1][i].coerceIn(0f, 1f) * 255).toInt()
-                    val b = (outTensor[0][2][i].coerceIn(0f, 1f) * 255).toInt()
+                val outputValue = result.get(0)
+                val floatBuffer = (outputValue as OnnxTensor).floatBuffer
+                val channelSize = size * size
+                val outPixels = IntArray(channelSize)
+                val rArr = FloatArray(channelSize)
+                val gArr = FloatArray(channelSize)
+                val bArr = FloatArray(channelSize)
+
+                floatBuffer.get(rArr)
+                floatBuffer.get(gArr)
+                floatBuffer.get(bArr)
+
+                for (i in 0 until channelSize) {
+                    val r = (rArr[i].coerceIn(0f, 1f) * 255).toInt()
+                    val g = (gArr[i].coerceIn(0f, 1f) * 255).toInt()
+                    val b = (bArr[i].coerceIn(0f, 1f) * 255).toInt()
                     outPixels[i] = Color.rgb(r, g, b)
                 }
                 val inpaintedScaled = Bitmap.createBitmap(outPixels, size, size, Bitmap.Config.ARGB_8888)

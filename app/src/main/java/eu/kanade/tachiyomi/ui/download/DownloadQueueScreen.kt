@@ -3,13 +3,20 @@ package eu.kanade.tachiyomi.ui.download
 import android.view.LayoutInflater
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SmallExtendedFloatingActionButton
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.animateFloatingActionButton
@@ -27,6 +34,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,11 +55,14 @@ import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.components.NestedMenuItem
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.databinding.DownloadListBinding
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Sort
+import mihon.icons.materialsymbols.rounded.Cancel
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.core.common.util.lang.launchUI
+import tachiyomi.domain.translation.model.TranslationStatus
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -70,6 +81,13 @@ object DownloadQueueScreen : Screen() {
         val downloadCount by remember {
             derivedStateOf { downloadList.sumOf { it.subItems.size } }
         }
+
+        val context = LocalContext.current
+        val translationManager = remember { context.appGraph.translationManager }
+        val translationQueue by translationManager.queue.collectAsStateWithLifecycle()
+        val isTranslationProcessing by translationManager.isProcessing.collectAsStateWithLifecycle()
+
+        var selectedTab by remember { mutableStateOf(0) }
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         var fabExpanded by remember { mutableStateOf(true) }
@@ -97,105 +115,121 @@ object DownloadQueueScreen : Screen() {
 
         Scaffold(
             topBar = {
-                AppBar(
-                    titleContent = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(MR.strings.label_download_queue),
-                                maxLines = 1,
-                                modifier = Modifier.weight(1f, false),
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            if (downloadCount > 0) {
-                                val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
-                                Pill(
-                                    text = "$downloadCount",
-                                    modifier = Modifier.padding(start = 4.dp),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                        .copy(alpha = pillAlpha),
-                                    fontSize = 14.sp,
+                Column {
+                    AppBar(
+                        titleContent = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = stringResource(MR.strings.label_download_queue),
+                                    maxLines = 1,
+                                    modifier = Modifier.weight(1f, false),
+                                    overflow = TextOverflow.Ellipsis,
                                 )
+                                if (downloadCount > 0) {
+                                    val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
+                                    Pill(
+                                        text = "$downloadCount",
+                                        modifier = Modifier.padding(start = 4.dp),
+                                        color = MaterialTheme.colorScheme.onBackground
+                                            .copy(alpha = pillAlpha),
+                                        fontSize = 14.sp,
+                                    )
+                                }
                             }
-                        }
-                    },
-                    navigateUp = navigator::pop,
-                    actions = {
-                        if (downloadList.isNotEmpty()) {
-                            var sortExpanded by remember { mutableStateOf(false) }
-                            val onDismissRequest = { sortExpanded = false }
-                            DropdownMenu(
-                                expanded = sortExpanded,
-                                onDismissRequest = onDismissRequest,
-                            ) {
-                                NestedMenuItem(
-                                    text = { Text(text = stringResource(MR.strings.action_order_by_upload_date)) },
-                                    children = { closeMenu ->
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(MR.strings.action_newest)) },
-                                            onClick = {
-                                                viewModel.reorderQueue(
-                                                    { it.download.chapter.dateUpload },
-                                                    true,
-                                                )
-                                                closeMenu()
-                                            },
-                                        )
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(MR.strings.action_oldest)) },
-                                            onClick = {
-                                                viewModel.reorderQueue(
-                                                    { it.download.chapter.dateUpload },
-                                                    false,
-                                                )
-                                                closeMenu()
-                                            },
-                                        )
-                                    },
-                                )
-                                NestedMenuItem(
-                                    text = { Text(text = stringResource(MR.strings.action_order_by_chapter_number)) },
-                                    children = { closeMenu ->
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(MR.strings.action_asc)) },
-                                            onClick = {
-                                                viewModel.reorderQueue(
-                                                    { it.download.chapter.chapterNumber },
-                                                    false,
-                                                )
-                                                closeMenu()
-                                            },
-                                        )
-                                        DropdownMenuItem(
-                                            text = { Text(text = stringResource(MR.strings.action_desc)) },
-                                            onClick = {
-                                                viewModel.reorderQueue(
-                                                    { it.download.chapter.chapterNumber },
-                                                    true,
-                                                )
-                                                closeMenu()
-                                            },
-                                        )
-                                    },
-                                )
-                            }
+                        },
+                        navigateUp = navigator::pop,
+                        actions = {
+                            if (selectedTab == 0 && downloadList.isNotEmpty()) {
+                                var sortExpanded by remember { mutableStateOf(false) }
+                                val onDismissRequest = { sortExpanded = false }
+                                DropdownMenu(
+                                    expanded = sortExpanded,
+                                    onDismissRequest = onDismissRequest,
+                                ) {
+                                    NestedMenuItem(
+                                        text = { Text(text = stringResource(MR.strings.action_order_by_upload_date)) },
+                                        children = { closeMenu ->
+                                            DropdownMenuItem(
+                                                text = { Text(text = stringResource(MR.strings.action_newest)) },
+                                                onClick = {
+                                                    viewModel.reorderQueue(
+                                                        { it.download.chapter.dateUpload },
+                                                        true,
+                                                    )
+                                                    closeMenu()
+                                                },
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text(text = stringResource(MR.strings.action_oldest)) },
+                                                onClick = {
+                                                    viewModel.reorderQueue(
+                                                        { it.download.chapter.dateUpload },
+                                                        false,
+                                                    )
+                                                    closeMenu()
+                                                },
+                                            )
+                                        },
+                                    )
+                                    NestedMenuItem(
+                                        text = {
+                                            Text(text = stringResource(MR.strings.action_order_by_chapter_number))
+                                        },
+                                        children = { closeMenu ->
+                                            DropdownMenuItem(
+                                                text = { Text(text = stringResource(MR.strings.action_asc)) },
+                                                onClick = {
+                                                    viewModel.reorderQueue(
+                                                        { it.download.chapter.chapterNumber },
+                                                        false,
+                                                    )
+                                                    closeMenu()
+                                                },
+                                            )
+                                            DropdownMenuItem(
+                                                text = { Text(text = stringResource(MR.strings.action_desc)) },
+                                                onClick = {
+                                                    viewModel.reorderQueue(
+                                                        { it.download.chapter.chapterNumber },
+                                                        true,
+                                                    )
+                                                    closeMenu()
+                                                },
+                                            )
+                                        },
+                                    )
+                                }
 
-                            AppBarActions(
-                                listOf(
-                                    AppBar.Action(
-                                        title = stringResource(MR.strings.action_sort),
-                                        icon = MaterialSymbols.AutoMirroredRounded.Sort,
-                                        onClick = { sortExpanded = true },
+                                AppBarActions(
+                                    listOf(
+                                        AppBar.Action(
+                                            title = stringResource(MR.strings.action_sort),
+                                            icon = MaterialSymbols.AutoMirroredRounded.Sort,
+                                            onClick = { sortExpanded = true },
+                                        ),
+                                        AppBar.OverflowAction(
+                                            title = stringResource(MR.strings.action_cancel_all),
+                                            onClick = { viewModel.clearQueue() },
+                                        ),
                                     ),
-                                    AppBar.OverflowAction(
-                                        title = stringResource(MR.strings.action_cancel_all),
-                                        onClick = { viewModel.clearQueue() },
-                                    ),
-                                ),
-                            )
-                        }
-                    },
-                    scrollBehavior = scrollBehavior,
-                )
+                                )
+                            }
+                        },
+                        scrollBehavior = scrollBehavior,
+                    )
+                    PrimaryTabRow(selectedTabIndex = selectedTab) {
+                        Tab(
+                            selected = selectedTab == 0,
+                            onClick = { selectedTab = 0 },
+                            text = { Text(stringResource(MR.strings.label_download_queue)) },
+                        )
+                        Tab(
+                            selected = selectedTab == 1,
+                            onClick = { selectedTab = 1 },
+                            text = { Text(stringResource(MR.strings.pref_category_translation)) },
+                        )
+                    }
+                }
             },
             floatingActionButton = {
                 val isRunning by viewModel.isDownloaderRunning.collectAsStateWithLifecycle()
@@ -231,56 +265,117 @@ object DownloadQueueScreen : Screen() {
                 )
             },
         ) { contentPadding ->
-            if (downloadList.isEmpty()) {
-                EmptyScreen(
-                    stringRes = MR.strings.information_no_downloads,
-                    modifier = Modifier.padding(contentPadding),
-                )
-                return@Scaffold
-            }
+            if (selectedTab == 1) {
+                if (translationQueue.isEmpty()) {
+                    EmptyScreen(
+                        stringRes = MR.strings.information_no_downloads,
+                        modifier = Modifier.padding(contentPadding),
+                    )
+                    return@Scaffold
+                }
 
-            val density = LocalDensity.current
-            val layoutDirection = LocalLayoutDirection.current
-            val left = with(density) { contentPadding.calculateLeftPadding(layoutDirection).toPx().roundToInt() }
-            val top = with(density) { contentPadding.calculateTopPadding().toPx().roundToInt() }
-            val right = with(density) { contentPadding.calculateRightPadding(layoutDirection).toPx().roundToInt() }
-            val bottom = with(density) { contentPadding.calculateBottomPadding().toPx().roundToInt() }
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(contentPadding)
+                        .fillMaxWidth(),
+                ) {
+                    items(
+                        items = translationQueue,
+                        key = { it.chapterId },
+                    ) { item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "${item.mangaTitle} - ${item.chapterName}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                if (item.status == TranslationStatus.TRANSLATING) {
+                                    LinearProgressIndicator(
+                                        progress = { item.progress },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 4.dp),
+                                    )
+                                } else if (item.error != null) {
+                                    val err = item.error
+                                    if (err != null) {
+                                        Text(
+                                            text = err,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
+                                    }
+                                }
+                            }
 
-            Box(modifier = Modifier.nestedScroll(nestedScrollConnection)) {
-                AndroidView(
-                    modifier = Modifier.fillMaxWidth(),
-                    factory = { context ->
-                        viewModel.controllerBinding = DownloadListBinding.inflate(LayoutInflater.from(context))
-                        viewModel.adapter = DownloadAdapter(viewModel.listener)
-                        viewModel.controllerBinding.root.adapter = viewModel.adapter
-                        viewModel.adapter?.isHandleDragEnabled = true
-                        viewModel.controllerBinding.root.layoutManager = LinearLayoutManager(context)
-
-                        ViewCompat.setNestedScrollingEnabled(viewModel.controllerBinding.root, true)
-
-                        scope.launchUI {
-                            viewModel.getDownloadStatusFlow()
-                                .collect(viewModel::onStatusChange)
+                            IconButton(onClick = { translationManager.cancelQueueItem(item.chapterId) }) {
+                                Icon(
+                                    imageVector = MaterialSymbols.Rounded.Cancel,
+                                    contentDescription = stringResource(MR.strings.action_cancel),
+                                )
+                            }
                         }
-                        scope.launchUI {
-                            viewModel.getDownloadProgressFlow()
-                                .collect(viewModel::onUpdateDownloadedPages)
-                        }
+                    }
+                }
+            } else {
+                if (downloadList.isEmpty()) {
+                    EmptyScreen(
+                        stringRes = MR.strings.information_no_downloads,
+                        modifier = Modifier.padding(contentPadding),
+                    )
+                    return@Scaffold
+                }
 
-                        viewModel.controllerBinding.root
-                    },
-                    update = {
-                        viewModel.controllerBinding.root
-                            .updatePadding(
-                                left = left,
-                                top = top,
-                                right = right,
-                                bottom = bottom,
-                            )
+                val density = LocalDensity.current
+                val layoutDirection = LocalLayoutDirection.current
+                val left = with(density) { contentPadding.calculateLeftPadding(layoutDirection).toPx().roundToInt() }
+                val top = with(density) { contentPadding.calculateTopPadding().toPx().roundToInt() }
+                val right = with(density) { contentPadding.calculateRightPadding(layoutDirection).toPx().roundToInt() }
+                val bottom = with(density) { contentPadding.calculateBottomPadding().toPx().roundToInt() }
 
-                        viewModel.adapter?.updateDataSet(downloadList)
-                    },
-                )
+                Box(modifier = Modifier.nestedScroll(nestedScrollConnection)) {
+                    AndroidView(
+                        modifier = Modifier.fillMaxWidth(),
+                        factory = { context ->
+                            viewModel.controllerBinding = DownloadListBinding.inflate(LayoutInflater.from(context))
+                            viewModel.adapter = DownloadAdapter(viewModel.listener)
+                            viewModel.controllerBinding.root.adapter = viewModel.adapter
+                            viewModel.adapter?.isHandleDragEnabled = true
+                            viewModel.controllerBinding.root.layoutManager = LinearLayoutManager(context)
+
+                            ViewCompat.setNestedScrollingEnabled(viewModel.controllerBinding.root, true)
+
+                            scope.launchUI {
+                                viewModel.getDownloadStatusFlow()
+                                    .collect(viewModel::onStatusChange)
+                            }
+                            scope.launchUI {
+                                viewModel.getDownloadProgressFlow()
+                                    .collect(viewModel::onUpdateDownloadedPages)
+                            }
+
+                            viewModel.controllerBinding.root
+                        },
+                        update = {
+                            viewModel.controllerBinding.root
+                                .updatePadding(
+                                    left = left,
+                                    top = top,
+                                    right = right,
+                                    bottom = bottom,
+                                )
+
+                            viewModel.adapter?.updateDataSet(downloadList)
+                        },
+                    )
+                }
             }
         }
     }

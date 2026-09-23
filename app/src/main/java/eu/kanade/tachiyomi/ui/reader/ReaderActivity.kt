@@ -462,6 +462,8 @@ class ReaderActivity : BaseActivity() {
         val verticalNavigatorOnLeft by readerPreferences.verticalNavigatorOnLeft.collectAsState()
         val verticalNavigatorHeight by readerPreferences.verticalNavigatorHeight.collectAsState()
 
+        val showTranslationMode by readerPreferences.showTranslationMode.collectAsState()
+
         ReaderAppBars(
             visible = state.menuVisible,
 
@@ -518,6 +520,8 @@ class ReaderActivity : BaseActivity() {
                 menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
             },
             onClickSettings = viewModel::openSettingsDialog,
+            showTranslation = showTranslationMode,
+            onClickTranslation = viewModel::toggleTranslationMode,
         )
     }
 

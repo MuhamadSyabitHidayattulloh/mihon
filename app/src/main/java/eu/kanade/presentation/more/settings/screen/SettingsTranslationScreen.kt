@@ -181,13 +181,14 @@ object SettingsTranslationScreen : SearchableSettings {
             if (!dir.exists()) dir.mkdirs()
             val destFile = File(dir, type.filename)
 
-            val url = java.net.URL(urlStr)
-            val connection = url.openConnection() as java.net.HttpURLConnection
-            connection.connect()
-            if (connection.responseCode == java.net.HttpURLConnection.HTTP_OK) {
-                connection.inputStream.use { input ->
-                    destFile.outputStream().use { output ->
-                        input.copyTo(output)
+            val client = context.appGraph.networkHelper.client
+            val request = okhttp3.Request.Builder().url(urlStr).build()
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    response.body.byteStream().use { input ->
+                        destFile.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
                     }
                 }
             }

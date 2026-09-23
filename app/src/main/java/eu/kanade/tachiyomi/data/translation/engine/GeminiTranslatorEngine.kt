@@ -18,8 +18,8 @@ class GeminiTranslatorEngine(
         text: String,
         sourceLang: TranslationLanguage,
         targetLang: TranslationLanguage,
-    ): String {
-        if (text.isBlank() || apiKey.isBlank()) return text
+    ): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        if (text.isBlank() || apiKey.isBlank()) return@withContext text
 
         val url = "https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey"
         val prompt =
@@ -51,16 +51,16 @@ class GeminiTranslatorEngine(
             .build()
 
         client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return text
+            if (!response.isSuccessful) return@withContext text
             val responseBody = response.body.string()
             val json = JSONObject(responseBody)
-            val candidates = json.optJSONArray("candidates") ?: return text
-            if (candidates.length() == 0) return text
+            val candidates = json.optJSONArray("candidates") ?: return@withContext text
+            if (candidates.length() == 0) return@withContext text
             val firstCandidate = candidates.getJSONObject(0)
-            val content = firstCandidate.optJSONObject("content") ?: return text
-            val parts = content.optJSONArray("parts") ?: return text
-            if (parts.length() == 0) return text
-            return parts.getJSONObject(0).optString("text", text).trim()
+            val content = firstCandidate.optJSONObject("content") ?: return@withContext text
+            val parts = content.optJSONArray("parts") ?: return@withContext text
+            if (parts.length() == 0) return@withContext text
+            parts.getJSONObject(0).optString("text", text).trim()
         }
     }
 }

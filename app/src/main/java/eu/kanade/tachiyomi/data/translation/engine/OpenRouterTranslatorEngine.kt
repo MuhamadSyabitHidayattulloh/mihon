@@ -18,8 +18,8 @@ class OpenRouterTranslatorEngine(
         text: String,
         sourceLang: TranslationLanguage,
         targetLang: TranslationLanguage,
-    ): String {
-        if (text.isBlank() || apiKey.isBlank()) return text
+    ): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        if (text.isBlank() || apiKey.isBlank()) return@withContext text
 
         val url = "https://openrouter.ai/api/v1/chat/completions"
         val prompt =
@@ -49,14 +49,14 @@ class OpenRouterTranslatorEngine(
             .build()
 
         client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return text
+            if (!response.isSuccessful) return@withContext text
             val responseBody = response.body.string()
             val json = JSONObject(responseBody)
-            val choices = json.optJSONArray("choices") ?: return text
-            if (choices.length() == 0) return text
+            val choices = json.optJSONArray("choices") ?: return@withContext text
+            if (choices.length() == 0) return@withContext text
             val firstChoice = choices.getJSONObject(0)
-            val message = firstChoice.optJSONObject("message") ?: return text
-            return message.optString("content", text).trim()
+            val message = firstChoice.optJSONObject("message") ?: return@withContext text
+            message.optString("content", text).trim()
         }
     }
 }

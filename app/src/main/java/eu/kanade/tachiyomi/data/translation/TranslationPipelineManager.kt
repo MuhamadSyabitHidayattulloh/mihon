@@ -27,8 +27,9 @@ import java.io.FileOutputStream
 class TranslationPipelineManager(
     private val context: Context,
     private val preferences: TranslationPreferences,
-    private val client: OkHttpClient,
+    private val networkHelper: eu.kanade.tachiyomi.network.NetworkHelper,
 ) {
+    private val client: OkHttpClient get() = networkHelper.client
     private val redrawer = CanvasRedrawer()
 
     private fun getModelFile(type: OnnxModelType): File {

@@ -6,12 +6,14 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.download.DownloadProvider
+import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import mihon.core.archive.archiveReader
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
@@ -156,32 +158,66 @@ class TranslationManager(
                 continue
             }
 
-            val files = downloadDir.listFiles()?.filter { file ->
-                file.isFile && ImageUtil.isImage(file.name) { file.openInputStream() }
-            } ?: emptyList()
-            if (files.isEmpty()) {
-                updateItemStatus(nextItem.chapterId, TranslationStatus.ERROR, error = "No images found in download")
-                continue
+            val isCbz = downloadDir.isFile && (downloadDir.name?.endsWith(".cbz", ignoreCase = true) == true)
+            var successCount = 0
+            var total = 0
+
+            if (isCbz) {
+                val archiveReader = downloadDir.archiveReader(context)
+                val entryNames = archiveReader.useEntries { entries ->
+                    entries
+                        .filter { it.isFile && ImageUtil.isImage(it.name) { archiveReader.getInputStream(it.name)!! } }
+                        .sortedWith { f1, f2 -> f1.name.compareToCaseInsensitiveNaturalOrder(f2.name) }
+                        .map { it.name }
+                        .toList()
+                }
+
+                total = entryNames.size
+                for ((index, entryName) in entryNames.withIndex()) {
+                    if (!_isProcessing.value) break
+                    try {
+                        val bytes = archiveReader.getInputStream(entryName)?.use { it.readBytes() }
+                        if (bytes != null) {
+                            val translatedBytes = pipelineManager.processImage(bytes)
+                            val pageName = java.io.File(entryName).name.ifBlank { "page_$index.jpg" }
+                            val outFile = targetDir.createFile(pageName)
+                            outFile?.openOutputStream()?.use { it.write(translatedBytes) }
+                            successCount++
+                            val progress = (index + 1).toFloat() / total
+                            updateItemProgress(nextItem.chapterId, progress, total, successCount)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                archiveReader.close()
+            } else {
+                val files = downloadDir.listFiles()?.filter { file ->
+                    file.isFile && ImageUtil.isImage(file.name) { file.openInputStream() }
+                } ?: emptyList()
+
+                total = files.size
+                for ((index, file) in files.withIndex()) {
+                    if (!_isProcessing.value) break
+                    try {
+                        val bytes = file.openInputStream().use { it.readBytes() }
+                        val translatedBytes = pipelineManager.processImage(bytes)
+
+                        val outFile = targetDir.createFile(file.name ?: "page_$index.jpg")
+                        outFile?.openOutputStream()?.use { it.write(translatedBytes) }
+
+                        successCount++
+                        val progress = (index + 1).toFloat() / total
+                        updateItemProgress(nextItem.chapterId, progress, total, successCount)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
             }
 
-            var successCount = 0
-            val total = files.size
-
-            for ((index, file) in files.withIndex()) {
-                if (!_isProcessing.value) break
-                try {
-                    val bytes = file.openInputStream().use { it.readBytes() }
-                    val translatedBytes = pipelineManager.processImage(bytes)
-
-                    val outFile = targetDir.createFile(file.name ?: "page_$index.jpg")
-                    outFile?.openOutputStream()?.use { it.write(translatedBytes) }
-
-                    successCount++
-                    val progress = (index + 1).toFloat() / total
-                    updateItemProgress(nextItem.chapterId, progress, total, successCount)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+            if (total == 0) {
+                updateItemStatus(nextItem.chapterId, TranslationStatus.ERROR, error = "No images found in download")
+                continue
             }
 
             if (successCount == total) {
