@@ -332,7 +332,8 @@ object DownloadQueueScreen : Screen() {
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                                 Text(
-                                    text = "Stage: ${item.currentStage.name} - Progress: ${item.donePages}/${item.totalPages}",
+                                    text = "Stage: ${item.currentStage.name} - Progress: " +
+                                        "${item.donePages}/${item.totalPages}",
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                                 item.logs.lastOrNull()?.let { lastLog ->
