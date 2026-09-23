@@ -168,7 +168,9 @@ object DownloadQueueScreen : Screen() {
                                         },
                                     )
                                     NestedMenuItem(
-                                        text = { Text(text = stringResource(MR.strings.action_order_by_chapter_number)) },
+                                        text = {
+                                            Text(text = stringResource(MR.strings.action_order_by_chapter_number))
+                                        },
                                         children = { closeMenu ->
                                             DropdownMenuItem(
                                                 text = { Text(text = stringResource(MR.strings.action_asc)) },
