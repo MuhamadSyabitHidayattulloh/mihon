@@ -43,6 +43,7 @@ import mihon.icons.materialsymbols.rounded.Palette
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.rounded.Security
 import mihon.icons.materialsymbols.rounded.Storage
+import mihon.icons.materialsymbols.rounded.Translate
 import mihon.icons.materialsymbols.rounded.Sync
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -194,6 +195,12 @@ object SettingsMainScreen : Screen() {
             subtitleRes = MR.strings.pref_downloads_summary,
             icon = MaterialSymbols.Rounded.Download,
             screen = SettingsDownloadScreen,
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_downloads, // or custom string
+            formatSubtitle = { "Atur preferensi terjemahan chapter dan model ML" },
+            icon = MaterialSymbols.Rounded.Translate,
+            screen = SettingsTranslationScreen::class.java.getDeclaredConstructor().newInstance() as VoyagerScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_tracking,

@@ -57,6 +57,8 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.manga.model.Manga
+import eu.kanade.tachiyomi.data.translation.TranslationManager
+import tachiyomi.domain.translation.service.TranslationPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.i18n.MR
@@ -83,6 +85,8 @@ class Downloader(
     private val getTracks: GetTracks,
     private val store: DownloadStore,
     private val notifier: DownloadNotifier,
+    private val translationManager: TranslationManager,
+    private val translationPreferences: TranslationPreferences,
 ) {
     /**
      * Queue where active downloads are kept.
@@ -406,6 +410,11 @@ class Downloader(
             DiskUtil.createNoMediaFile(tmpDir, context)
 
             download.status = Download.State.DOWNLOADED
+
+            // Auto translate if enabled
+            if (translationPreferences.autoTranslateAfterDownload.get()) {
+                translationManager.enqueue(download.source, download.manga, download.chapter)
+            }
         } catch (error: Throwable) {
             if (error is CancellationException) throw error
             // If the page list threw, it will resume here
