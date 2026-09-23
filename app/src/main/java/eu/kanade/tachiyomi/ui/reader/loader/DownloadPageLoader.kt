@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import mihon.core.archive.archiveReader
+import eu.kanade.tachiyomi.data.translation.TranslationStorage
 import tachiyomi.domain.manga.model.Manga
 import uy.kohesive.injekt.injectLazy
 
@@ -23,7 +24,13 @@ internal class DownloadPageLoader(
     private val source: Source,
     private val downloadManager: DownloadManager,
     private val downloadProvider: DownloadProvider,
+    private val translationStorage: TranslationStorage? = null,
+    private var isTranslationMode: Boolean = false,
 ) : PageLoader() {
+
+    fun setTranslationMode(enabled: Boolean) {
+        this.isTranslationMode = enabled
+    }
 
     private val context: Context by injectLazy()
 
@@ -61,7 +68,17 @@ internal class DownloadPageLoader(
         val pages = downloadManager.buildPageList(source, manga, chapter.chapter.toDomainChapter()!!)
         return pages.map { page ->
             ReaderPage(page.index, page.url, page.imageUrl) {
-                context.contentResolver.openInputStream(page.uri ?: Uri.EMPTY)!!
+                if (isTranslationMode && translationStorage != null) {
+                    val translatedStream = translationStorage.getTranslatedPageInputStream(
+                        chapter.chapter.toDomainChapter()!!,
+                        manga,
+                        source,
+                        page.index,
+                    )
+                    translatedStream ?: context.contentResolver.openInputStream(page.uri ?: Uri.EMPTY)!!
+                } else {
+                    context.contentResolver.openInputStream(page.uri ?: Uri.EMPTY)!!
+                }
             }.apply {
                 status = Page.State.Ready
             }

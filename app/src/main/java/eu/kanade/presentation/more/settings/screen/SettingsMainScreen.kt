@@ -43,6 +43,9 @@ import mihon.icons.materialsymbols.rounded.Palette
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.rounded.Security
 import mihon.icons.materialsymbols.rounded.Storage
+import mihon.icons.materialsymbols.rounded.Translate
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import mihon.icons.materialsymbols.rounded.Sync
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -194,6 +197,12 @@ object SettingsMainScreen : Screen() {
             subtitleRes = MR.strings.pref_downloads_summary,
             icon = MaterialSymbols.Rounded.Download,
             screen = SettingsDownloadScreen,
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_downloads,
+            formatSubtitle = { "Atur preferensi terjemahan chapter dan model ML" },
+            icon = MaterialSymbols.Rounded.Translate,
+            screen = Injekt.get<SettingsTranslationScreen>(),
         ),
         Item(
             titleRes = MR.strings.pref_category_tracking,

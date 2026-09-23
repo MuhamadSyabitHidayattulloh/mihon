@@ -9,7 +9,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.SmallExtendedFloatingActionButton
+import eu.kanade.tachiyomi.data.translation.TranslationManager
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.animateFloatingActionButton
@@ -70,6 +76,9 @@ object DownloadQueueScreen : Screen() {
         val downloadCount by remember {
             derivedStateOf { downloadList.sumOf { it.subItems.size } }
         }
+
+        var selectedTabIndex by remember { mutableStateOf(0) }
+        val translationManager = remember { Injekt.get<TranslationManager>() }
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         var fabExpanded by remember { mutableStateOf(true) }
@@ -198,89 +207,109 @@ object DownloadQueueScreen : Screen() {
                 )
             },
             floatingActionButton = {
-                val isRunning by viewModel.isDownloaderRunning.collectAsStateWithLifecycle()
-                SmallExtendedFloatingActionButton(
-                    text = {
-                        val id = if (isRunning) {
-                            MR.strings.action_pause
-                        } else {
-                            MR.strings.action_resume
-                        }
-                        Text(text = stringResource(id))
-                    },
-                    icon = {
-                        val icon = if (isRunning) {
-                            MaterialSymbols.RoundedFilled.Pause
-                        } else {
-                            MaterialSymbols.RoundedFilled.PlayArrow
-                        }
-                        Icon(imageVector = icon, contentDescription = null)
-                    },
-                    onClick = {
-                        if (isRunning) {
-                            viewModel.pauseDownloads()
-                        } else {
-                            viewModel.startDownloads()
-                        }
-                    },
-                    expanded = fabExpanded,
-                    modifier = Modifier.animateFloatingActionButton(
-                        visible = downloadList.isNotEmpty(),
-                        alignment = Alignment.BottomEnd,
-                    ),
-                )
+                if (selectedTabIndex == 0) {
+                    val isRunning by viewModel.isDownloaderRunning.collectAsStateWithLifecycle()
+                    SmallExtendedFloatingActionButton(
+                        text = {
+                            val id = if (isRunning) {
+                                MR.strings.action_pause
+                            } else {
+                                MR.strings.action_resume
+                            }
+                            Text(text = stringResource(id))
+                        },
+                        icon = {
+                            val icon = if (isRunning) {
+                                MaterialSymbols.RoundedFilled.Pause
+                            } else {
+                                MaterialSymbols.RoundedFilled.PlayArrow
+                            }
+                            Icon(imageVector = icon, contentDescription = null)
+                        },
+                        onClick = {
+                            if (isRunning) {
+                                viewModel.pauseDownloads()
+                            } else {
+                                viewModel.startDownloads()
+                            }
+                        },
+                        expanded = fabExpanded,
+                        modifier = Modifier.animateFloatingActionButton(
+                            visible = downloadList.isNotEmpty(),
+                            alignment = Alignment.BottomEnd,
+                        ),
+                    )
+                }
             },
         ) { contentPadding ->
-            if (downloadList.isEmpty()) {
-                EmptyScreen(
-                    stringRes = MR.strings.information_no_downloads,
-                    modifier = Modifier.padding(contentPadding),
-                )
-                return@Scaffold
-            }
+            Column(modifier = Modifier.padding(contentPadding)) {
+                TabRow(selectedTabIndex = selectedTabIndex) {
+                    Tab(
+                        selected = selectedTabIndex == 0,
+                        onClick = { selectedTabIndex = 0 },
+                        text = { Text("Antrean Unduhan") },
+                    )
+                    Tab(
+                        selected = selectedTabIndex == 1,
+                        onClick = { selectedTabIndex = 1 },
+                        text = { Text("Antrean Terjemahan") },
+                    )
+                }
 
-            val density = LocalDensity.current
-            val layoutDirection = LocalLayoutDirection.current
-            val left = with(density) { contentPadding.calculateLeftPadding(layoutDirection).toPx().roundToInt() }
-            val top = with(density) { contentPadding.calculateTopPadding().toPx().roundToInt() }
-            val right = with(density) { contentPadding.calculateRightPadding(layoutDirection).toPx().roundToInt() }
-            val bottom = with(density) { contentPadding.calculateBottomPadding().toPx().roundToInt() }
+                if (selectedTabIndex == 1) {
+                    TranslationQueueTabContent(
+                        translationManager = translationManager,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else if (downloadList.isEmpty()) {
+                    EmptyScreen(
+                        stringRes = MR.strings.information_no_downloads,
+                    )
+                } else {
+                    val density = LocalDensity.current
+                    val layoutDirection = LocalLayoutDirection.current
+                    val left = with(density) { contentPadding.calculateLeftPadding(layoutDirection).toPx().roundToInt() }
+                    val top = 0
+                    val right = with(density) { contentPadding.calculateRightPadding(layoutDirection).toPx().roundToInt() }
+                    val bottom = with(density) { contentPadding.calculateBottomPadding().toPx().roundToInt() }
 
-            Box(modifier = Modifier.nestedScroll(nestedScrollConnection)) {
-                AndroidView(
-                    modifier = Modifier.fillMaxWidth(),
-                    factory = { context ->
-                        viewModel.controllerBinding = DownloadListBinding.inflate(LayoutInflater.from(context))
-                        viewModel.adapter = DownloadAdapter(viewModel.listener)
-                        viewModel.controllerBinding.root.adapter = viewModel.adapter
-                        viewModel.adapter?.isHandleDragEnabled = true
-                        viewModel.controllerBinding.root.layoutManager = LinearLayoutManager(context)
+                    Box(modifier = Modifier.nestedScroll(nestedScrollConnection)) {
+                        AndroidView(
+                            modifier = Modifier.fillMaxWidth(),
+                            factory = { context ->
+                                viewModel.controllerBinding = DownloadListBinding.inflate(LayoutInflater.from(context))
+                                viewModel.adapter = DownloadAdapter(viewModel.listener)
+                                viewModel.controllerBinding.root.adapter = viewModel.adapter
+                                viewModel.adapter?.isHandleDragEnabled = true
+                                viewModel.controllerBinding.root.layoutManager = LinearLayoutManager(context)
 
-                        ViewCompat.setNestedScrollingEnabled(viewModel.controllerBinding.root, true)
+                                ViewCompat.setNestedScrollingEnabled(viewModel.controllerBinding.root, true)
 
-                        scope.launchUI {
-                            viewModel.getDownloadStatusFlow()
-                                .collect(viewModel::onStatusChange)
-                        }
-                        scope.launchUI {
-                            viewModel.getDownloadProgressFlow()
-                                .collect(viewModel::onUpdateDownloadedPages)
-                        }
+                                scope.launchUI {
+                                    viewModel.getDownloadStatusFlow()
+                                        .collect(viewModel::onStatusChange)
+                                }
+                                scope.launchUI {
+                                    viewModel.getDownloadProgressFlow()
+                                        .collect(viewModel::onUpdateDownloadedPages)
+                                }
 
-                        viewModel.controllerBinding.root
-                    },
-                    update = {
-                        viewModel.controllerBinding.root
-                            .updatePadding(
-                                left = left,
-                                top = top,
-                                right = right,
-                                bottom = bottom,
-                            )
+                                viewModel.controllerBinding.root
+                            },
+                            update = {
+                                viewModel.controllerBinding.root
+                                    .updatePadding(
+                                        left = left,
+                                        top = top,
+                                        right = right,
+                                        bottom = bottom,
+                                    )
 
-                        viewModel.adapter?.updateDataSet(downloadList)
-                    },
-                )
+                                viewModel.adapter?.updateDataSet(downloadList)
+                            },
+                        )
+                    }
+                }
             }
         }
     }

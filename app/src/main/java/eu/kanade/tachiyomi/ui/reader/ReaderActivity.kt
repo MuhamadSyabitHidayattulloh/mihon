@@ -518,6 +518,17 @@ class ReaderActivity : BaseActivity() {
                 menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
             },
             onClickSettings = viewModel::openSettingsDialog,
+            translationEnabled = viewModel.isTranslationMode,
+            onClickTranslation = {
+                viewModel.isTranslationMode = !viewModel.isTranslationMode
+                menuToggleToast?.cancel()
+                menuToggleToast = toast(if (viewModel.isTranslationMode) "Terjemahan Aktif" else "Terjemahan Nonaktif")
+                viewModel.state.value.viewer?.let { viewer ->
+                    viewModel.state.value.viewerChapters?.let { chapters ->
+                        viewer.setChapters(chapters)
+                    }
+                }
+            },
         )
     }
 

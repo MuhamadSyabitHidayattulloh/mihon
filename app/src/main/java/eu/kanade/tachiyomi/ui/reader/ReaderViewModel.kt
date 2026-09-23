@@ -270,6 +270,11 @@ class ReaderViewModel(
             .map(::ReaderChapter)
     }
 
+    var isTranslationMode: Boolean = false
+        set(value) {
+            field = value
+            loader?.setTranslationMode(value)
+        }
     private var incognitoMode: Boolean = false
     private val downloadAheadAmount = downloadPreferences.autoDownloadWhileReading.get()
 

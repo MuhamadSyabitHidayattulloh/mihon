@@ -44,9 +44,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
+import androidx.compose.runtime.collectAsState
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterHeader
+import eu.kanade.presentation.manga.components.ChapterTranslationAction
 import eu.kanade.presentation.manga.components.ExpandableMangaDescription
 import eu.kanade.presentation.manga.components.MangaActionRow
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
@@ -56,6 +58,8 @@ import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
+import eu.kanade.tachiyomi.data.translation.TranslationManager
+import eu.kanade.tachiyomi.data.translation.model.TranslationTask
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
@@ -742,6 +746,9 @@ private fun LazyListScope.sharedChapterItems(
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
 ) {
+    val translationManager = Injekt.get<TranslationManager>()
+    val translationQueue by translationManager.queue.collectAsState()
+
     items(
         items = chapters,
         key = { item ->
@@ -759,6 +766,11 @@ private fun LazyListScope.sharedChapterItems(
                 MissingChapterCountListItem(count = item.count)
             }
             is ChapterList.Item -> {
+                val isTranslated = remember(item.chapter) {
+                    translationManager.isChapterTranslated(item.chapter, manga, Injekt.get<tachiyomi.domain.source.service.SourceManager>().getOrStub(manga.source))
+                }
+                val task = translationQueue.firstOrNull { it.chapter.id == item.chapter.id }
+
                 MangaChapterListItem(
                     title = if (manga.displayMode == Manga.CHAPTER_DISPLAY_NUMBER) {
                         stringResource(
@@ -786,6 +798,22 @@ private fun LazyListScope.sharedChapterItems(
                     downloadProgressProvider = { item.downloadProgress },
                     chapterSwipeStartAction = chapterSwipeStartAction,
                     chapterSwipeEndAction = chapterSwipeEndAction,
+                    translationStateProvider = {
+                        when {
+                            isTranslated -> TranslationTask.State.TRANSLATED
+                            task != null -> task.state
+                            else -> TranslationTask.State.NOT_TRANSLATED
+                        }
+                    },
+                    translationProgressProvider = { task?.progress ?: 0f },
+                    onTranslationClick = { action ->
+                        val source = Injekt.get<tachiyomi.domain.source.service.SourceManager>().getOrStub(manga.source)
+                        when (action) {
+                            ChapterTranslationAction.START -> translationManager.enqueue(source, manga, item.chapter)
+                            ChapterTranslationAction.CANCEL -> translationManager.removeFromQueue(item.chapter)
+                            ChapterTranslationAction.DELETE -> translationManager.deleteTranslation(item.chapter, manga, source)
+                        }
+                    },
                     onLongClick = {
                         onChapterSelected(item, !item.selected, true)
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
