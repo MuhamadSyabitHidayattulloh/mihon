@@ -44,15 +44,11 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
-import eu.kanade.presentation.components.relativeDateText
 import androidx.compose.runtime.collectAsState
+import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
-import eu.kanade.presentation.manga.components.ChapterTranslationAction
-import eu.kanade.tachiyomi.data.translation.TranslationManager
-import eu.kanade.tachiyomi.data.translation.model.TranslationTask
-import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.get
 import eu.kanade.presentation.manga.components.ChapterHeader
+import eu.kanade.presentation.manga.components.ChapterTranslationAction
 import eu.kanade.presentation.manga.components.ExpandableMangaDescription
 import eu.kanade.presentation.manga.components.MangaActionRow
 import eu.kanade.presentation.manga.components.MangaBottomActionMenu
@@ -62,6 +58,8 @@ import eu.kanade.presentation.manga.components.MangaToolbar
 import eu.kanade.presentation.manga.components.MissingChapterCountListItem
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.model.Download
+import eu.kanade.tachiyomi.data.translation.TranslationManager
+import eu.kanade.tachiyomi.data.translation.model.TranslationTask
 import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
