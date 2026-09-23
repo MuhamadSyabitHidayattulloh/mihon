@@ -123,7 +123,20 @@ class MangaViewModel(
     private val sourceManager: SourceManager,
     private val refreshTracks: RefreshTracks,
     private val coverCache: CoverCache,
+    val translationManager: eu.kanade.tachiyomi.data.translation.TranslationManager,
 ) : ViewModel() {
+
+    fun translateChapters(chapters: List<Chapter>) {
+        val manga = manga ?: return
+        for (chapter in chapters) {
+            translationManager.enqueueChapter(manga, chapter)
+        }
+    }
+
+    fun deleteTranslation(chapter: Chapter) {
+        val manga = manga ?: return
+        translationManager.deleteTranslation(manga, chapter)
+    }
 
     val state: StateFlow<MangaViewModel.State>
         field = MutableStateFlow<MangaViewModel.State>(State.Loading)

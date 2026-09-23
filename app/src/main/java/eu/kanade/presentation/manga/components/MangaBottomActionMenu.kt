@@ -62,6 +62,7 @@ import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.icons.materialsymbols.rounded.RemoveDone
 import mihon.icons.materialsymbols.rounded.SwapCalls
+import mihon.icons.materialsymbols.rounded.Sync
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
@@ -76,6 +77,7 @@ fun MangaBottomActionMenu(
     onMarkAsUnreadClicked: (() -> Unit)? = null,
     onMarkPreviousAsReadClicked: (() -> Unit)? = null,
     onDownloadClicked: (() -> Unit)? = null,
+    onTranslateClicked: (() -> Unit)? = null,
     onDeleteClicked: (() -> Unit)? = null,
 ) {
     AnimatedVisibility(
@@ -162,6 +164,15 @@ fun MangaBottomActionMenu(
                         toConfirm = confirm[5],
                         onLongClick = { onLongClickItem(5) },
                         onClick = onDownloadClicked,
+                    )
+                }
+                if (onTranslateClicked != null) {
+                    Button(
+                        title = stringResource(MR.strings.action_translate),
+                        icon = MaterialSymbols.Rounded.Sync,
+                        toConfirm = confirm[6],
+                        onLongClick = { onLongClickItem(6) },
+                        onClick = onTranslateClicked,
                     )
                 }
                 if (onDeleteClicked != null) {

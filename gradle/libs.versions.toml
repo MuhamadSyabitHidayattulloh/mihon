@@ -76,8 +76,12 @@ valkyrie = "0.5.2"
 voyager = "2.2.21-1.10.3"
 webgpuviewer = "47"
 xmlutil = "1.0.2"
+mlkit-translate = "17.0.3"
+onnxruntime = "1.30.0"
 
 [libraries]
+mlkit-translate = { module = "com.google.mlkit:translate", version.ref = "mlkit-translate" }
+onnxruntime-android = { module = "com.microsoft.onnxruntime:onnxruntime-android", version.ref = "onnxruntime" }
 aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
 android-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugar" }
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle" }

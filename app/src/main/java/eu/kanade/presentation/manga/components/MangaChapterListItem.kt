@@ -63,6 +63,9 @@ fun MangaChapterListItem(
     onClick: () -> Unit,
     onDownloadClick: ((ChapterDownloadAction) -> Unit)?,
     onChapterSwipe: (LibraryPreferences.ChapterSwipeAction) -> Unit,
+    translationStatusProvider: (() -> tachiyomi.domain.translation.model.TranslationStatus)? = null,
+    translationProgressProvider: (() -> Float)? = null,
+    onTranslationClick: ((tachiyomi.domain.translation.model.TranslationStatus) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val start = getSwipeAction(
@@ -169,6 +172,16 @@ fun MangaChapterListItem(
                         }
                     }
                 }
+            }
+
+            if (translationStatusProvider != null && downloadStateProvider() == Download.State.DOWNLOADED) {
+                ChapterTranslationIndicator(
+                    enabled = downloadIndicatorEnabled,
+                    modifier = Modifier.padding(start = 4.dp),
+                    statusProvider = translationStatusProvider,
+                    progressProvider = translationProgressProvider ?: { 0f },
+                    onClick = { onTranslationClick?.invoke(it) },
+                )
             }
 
             ChapterDownloadIndicator(

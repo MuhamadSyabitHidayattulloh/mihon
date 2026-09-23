@@ -99,3 +99,11 @@
     public <init>();
     public void destroy();
 }
+
+# ONNX Runtime JNI reflective class instantiation
+-keep class ai.onnxruntime.** { *; }
+-keepclassmembers class ai.onnxruntime.** {
+    <init>(...);
+    <fields>;
+    <methods>;
+}

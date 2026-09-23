@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,6 +15,7 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
+import mihon.icons.materialsymbols.rounded.Sync
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -26,6 +28,8 @@ fun ReaderBottomBar(
     cropEnabled: Boolean,
     onClickCropBorder: () -> Unit,
     onClickSettings: () -> Unit,
+    showTranslation: Boolean = false,
+    onClickTranslation: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -46,6 +50,27 @@ fun ReaderBottomBar(
                 imageVector = orientation.icon,
                 contentDescription = stringResource(MR.strings.rotation_type),
             )
+        }
+
+        IconButton(onClick = onClickSettings) {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.Settings,
+                contentDescription = stringResource(MR.strings.action_settings),
+            )
+        }
+
+        if (onClickTranslation != null) {
+            IconButton(onClick = onClickTranslation) {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.Sync,
+                    contentDescription = stringResource(MR.strings.action_translate),
+                    tint = if (showTranslation) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        androidx.compose.material3.LocalContentColor.current
+                    },
+                )
+            }
         }
 
         IconButton(onClick = onClickCropBorder) {

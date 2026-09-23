@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,6 +45,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.manga.components.ChapterHeader
@@ -60,6 +62,7 @@ import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.ui.manga.ChapterList
 import eu.kanade.tachiyomi.ui.manga.MangaViewModel
 import eu.kanade.tachiyomi.util.system.copyToClipboard
+import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import tachiyomi.domain.chapter.model.Chapter
@@ -67,6 +70,7 @@ import tachiyomi.domain.chapter.service.missingChaptersCount
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.model.StubSource
+import tachiyomi.domain.translation.model.TranslationStatus
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.VerticalFastScroller
@@ -117,6 +121,9 @@ fun MangaScreen(
     onMultiMarkAsReadClicked: (List<Chapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (Chapter) -> Unit,
     onMultiDeleteClicked: (List<Chapter>) -> Unit,
+    onMultiTranslateClicked: ((List<Chapter>) -> Unit)? = null,
+    onTranslateChapter: ((Chapter) -> Unit)? = null,
+    onDeleteTranslation: ((Chapter) -> Unit)? = null,
 
     // For chapter swipe
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
@@ -164,6 +171,9 @@ fun MangaScreen(
             onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
             onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
+            onMultiTranslateClicked = onMultiTranslateClicked,
+            onTranslateChapter = onTranslateChapter,
+            onDeleteTranslation = onDeleteTranslation,
             onChapterSwipe = onChapterSwipe,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
@@ -200,6 +210,9 @@ fun MangaScreen(
             onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
             onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
             onMultiDeleteClicked = onMultiDeleteClicked,
+            onMultiTranslateClicked = onMultiTranslateClicked,
+            onTranslateChapter = onTranslateChapter,
+            onDeleteTranslation = onDeleteTranslation,
             onChapterSwipe = onChapterSwipe,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
@@ -248,6 +261,9 @@ private fun MangaScreenSmallImpl(
     onMultiMarkAsReadClicked: (List<Chapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (Chapter) -> Unit,
     onMultiDeleteClicked: (List<Chapter>) -> Unit,
+    onMultiTranslateClicked: ((List<Chapter>) -> Unit)? = null,
+    onTranslateChapter: ((Chapter) -> Unit)? = null,
+    onDeleteTranslation: ((Chapter) -> Unit)? = null,
 
     // For chapter swipe
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
@@ -320,6 +336,7 @@ private fun MangaScreenSmallImpl(
                 onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
                 onDownloadChapter = onDownloadChapter,
                 onMultiDeleteClicked = onMultiDeleteClicked,
+                onMultiTranslateClicked = onMultiTranslateClicked,
                 fillFraction = 1f,
             )
         },
@@ -443,6 +460,8 @@ private fun MangaScreenSmallImpl(
                         onDownloadChapter = onDownloadChapter,
                         onChapterSelected = onChapterSelected,
                         onChapterSwipe = onChapterSwipe,
+                        onTranslateChapter = onTranslateChapter,
+                        onDeleteTranslation = onDeleteTranslation,
                     )
                 }
             }
@@ -490,6 +509,9 @@ fun MangaScreenLargeImpl(
     onMultiMarkAsReadClicked: (List<Chapter>, markAsRead: Boolean) -> Unit,
     onMarkPreviousAsReadClicked: (Chapter) -> Unit,
     onMultiDeleteClicked: (List<Chapter>) -> Unit,
+    onMultiTranslateClicked: ((List<Chapter>) -> Unit)? = null,
+    onTranslateChapter: ((Chapter) -> Unit)? = null,
+    onDeleteTranslation: ((Chapter) -> Unit)? = null,
 
     // For swipe actions
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
@@ -559,6 +581,7 @@ fun MangaScreenLargeImpl(
                     onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
                     onDownloadChapter = onDownloadChapter,
                     onMultiDeleteClicked = onMultiDeleteClicked,
+                    onMultiTranslateClicked = onMultiTranslateClicked,
                     fillFraction = 0.5f,
                 )
             }
@@ -680,6 +703,8 @@ fun MangaScreenLargeImpl(
                                 onDownloadChapter = onDownloadChapter,
                                 onChapterSelected = onChapterSelected,
                                 onChapterSwipe = onChapterSwipe,
+                                onTranslateChapter = onTranslateChapter,
+                                onDeleteTranslation = onDeleteTranslation,
                             )
                         }
                     }
@@ -697,6 +722,7 @@ private fun SharedMangaBottomActionMenu(
     onMarkPreviousAsReadClicked: (Chapter) -> Unit,
     onDownloadChapter: ((List<ChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onMultiDeleteClicked: (List<Chapter>) -> Unit,
+    onMultiTranslateClicked: ((List<Chapter>) -> Unit)? = null,
     fillFraction: Float,
     modifier: Modifier = Modifier,
 ) {
@@ -723,6 +749,13 @@ private fun SharedMangaBottomActionMenu(
         }.takeIf {
             onDownloadChapter != null && selected.fastAny { it.downloadState != Download.State.DOWNLOADED }
         },
+        onTranslateClicked = if (onMultiTranslateClicked != null &&
+            selected.fastAny { it.downloadState == Download.State.DOWNLOADED }
+        ) {
+            { onMultiTranslateClicked.invoke(selected.fastMap { it.chapter }) }
+        } else {
+            null
+        },
         onDeleteClicked = {
             onMultiDeleteClicked(selected.fastMap { it.chapter })
         }.takeIf {
@@ -741,6 +774,8 @@ private fun LazyListScope.sharedChapterItems(
     onDownloadChapter: ((List<ChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     onChapterSelected: (ChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (ChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
+    onTranslateChapter: ((Chapter) -> Unit)? = null,
+    onDeleteTranslation: ((Chapter) -> Unit)? = null,
 ) {
     items(
         items = chapters,
@@ -753,12 +788,28 @@ private fun LazyListScope.sharedChapterItems(
         contentType = { MangaScreenItem.CHAPTER },
     ) { item ->
         val haptic = LocalHapticFeedback.current
+        val context = LocalContext.current
+        val translationManager = remember { context.appGraph.translationManager }
+        val translationQueue by translationManager.queue.collectAsStateWithLifecycle()
 
         when (item) {
             is ChapterList.MissingCount -> {
                 MissingChapterCountListItem(count = item.count)
             }
             is ChapterList.Item -> {
+                val translationStatus by produceState(
+                    initialValue = TranslationStatus.NOT_TRANSLATED,
+                    key1 = item.chapter.id,
+                    key2 = translationQueue,
+                ) {
+                    val transItem = translationQueue.firstOrNull { it.chapterId == item.chapter.id }
+                    value = when {
+                        transItem != null -> transItem.status
+                        translationManager.isChapterTranslated(manga, item.chapter) -> TranslationStatus.TRANSLATED
+                        else -> TranslationStatus.NOT_TRANSLATED
+                    }
+                }
+
                 MangaChapterListItem(
                     title = if (manga.displayMode == Manga.CHAPTER_DISPLAY_NUMBER) {
                         stringResource(
@@ -805,6 +856,19 @@ private fun LazyListScope.sharedChapterItems(
                     },
                     onChapterSwipe = {
                         onChapterSwipe(item, it)
+                    },
+                    translationStatusProvider = {
+                        translationStatus
+                    },
+                    translationProgressProvider = {
+                        translationQueue.firstOrNull { it.chapterId == item.chapter.id }?.progress ?: 0f
+                    },
+                    onTranslationClick = { status ->
+                        if (status == tachiyomi.domain.translation.model.TranslationStatus.TRANSLATED) {
+                            onDeleteTranslation?.invoke(item.chapter)
+                        } else {
+                            onTranslateChapter?.invoke(item.chapter)
+                        }
                     },
                 )
             }

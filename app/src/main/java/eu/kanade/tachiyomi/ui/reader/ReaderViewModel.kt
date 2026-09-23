@@ -16,6 +16,7 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactoryKey
+import eu.kanade.core.preference.asState
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.chapter.model.toDbChapter
 import eu.kanade.domain.manga.interactor.SetMangaViewerFlags
@@ -136,6 +137,13 @@ class ReaderViewModel(
 
     private val mutableState = MutableStateFlow(State())
     val state = mutableState.asStateFlow()
+
+    val showTranslationMode by lazy { readerPreferences.showTranslationMode.asState(viewModelScope) }
+
+    fun toggleTranslationMode() {
+        readerPreferences.showTranslationMode.set(!readerPreferences.showTranslationMode.get())
+        eventChannel.trySend(Event.ReloadViewerChapters)
+    }
 
     /**
      * Ids of the manga and chapter the reader was launched with, taken from the activity intent.
