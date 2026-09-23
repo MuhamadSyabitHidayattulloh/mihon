@@ -52,16 +52,27 @@ class TextDetector(
         }
         inputBuffer.rewind()
 
-        val inputName = sess.inputNames.iterator().next()
-        val tensor = OnnxTensor.createTensor(
+        val inputNamesList = sess.inputNames.toList()
+        val imgInputName = inputNamesList.getOrElse(0) { "images" }
+        val imgTensor = OnnxTensor.createTensor(
             env,
             inputBuffer,
             longArrayOf(1, 3, inputSize.toLong(), inputSize.toLong()),
         )
 
+        val inputMap = mutableMapOf<String, OnnxTensor>(imgInputName to imgTensor)
+        var sizeTensor: OnnxTensor? = null
+
+        if (inputNamesList.size > 1) {
+            val sizeInputName = inputNamesList[1]
+            val origSizes = java.nio.LongBuffer.wrap(longArrayOf(bitmap.height.toLong(), bitmap.width.toLong()))
+            sizeTensor = OnnxTensor.createTensor(env, origSizes, longArrayOf(1, 2))
+            inputMap[sizeInputName] = sizeTensor
+        }
+
         val boxes = mutableListOf<BoundingBox>()
         try {
-            sess.run(mapOf(inputName to tensor)).use { result ->
+            sess.run(inputMap).use { result ->
                 val output = result.get(0).value
                 if (output is Array<*>) {
                     val arr = output as Array<Array<FloatArray>>
@@ -92,7 +103,8 @@ class TextDetector(
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            tensor.close()
+            imgTensor.close()
+            sizeTensor?.close()
         }
 
         return boxes
