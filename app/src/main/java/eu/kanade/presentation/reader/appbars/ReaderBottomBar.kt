@@ -26,6 +26,8 @@ fun ReaderBottomBar(
     cropEnabled: Boolean,
     onClickCropBorder: () -> Unit,
     onClickSettings: () -> Unit,
+    showTranslation: Boolean = false,
+    onClickTranslation: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -46,6 +48,27 @@ fun ReaderBottomBar(
                 imageVector = orientation.icon,
                 contentDescription = stringResource(MR.strings.rotation_type),
             )
+        }
+
+        IconButton(onClick = onClickSettings) {
+            Icon(
+                imageVector = MaterialSymbols.Rounded.Settings,
+                contentDescription = stringResource(MR.strings.action_settings),
+            )
+        }
+
+        if (onClickTranslation != null) {
+            IconButton(onClick = onClickTranslation) {
+                Icon(
+                    imageVector = mihon.icons.materialsymbols.rounded.Sync,
+                    contentDescription = stringResource(MR.strings.action_translate),
+                    tint = if (showTranslation) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        androidx.compose.material3.LocalContentColor.current
+                    },
+                )
+            }
         }
 
         IconButton(onClick = onClickCropBorder) {

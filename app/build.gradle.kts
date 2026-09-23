@@ -322,6 +322,10 @@ dependencies {
     // String similarity
     implementation(libs.stringSimilarity)
 
+    // ML / Translation / ONNX
+    implementation(libs.mlkit.translate)
+    implementation(libs.onnxruntime.android)
+
     // Tests
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
