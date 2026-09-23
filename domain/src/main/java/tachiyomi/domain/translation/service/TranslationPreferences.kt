@@ -38,7 +38,7 @@ class TranslationPreferences(
 
     val geminiModel: Preference<String> = preferenceStore.getString(
         "pref_gemini_model_key",
-        "gemini-1.5-flash",
+        "gemini-2.5-flash",
     )
 
     val openRouterApiKey: Preference<String> = preferenceStore.getString(

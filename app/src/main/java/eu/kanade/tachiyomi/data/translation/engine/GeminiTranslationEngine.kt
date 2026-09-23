@@ -25,7 +25,7 @@ class GeminiTranslationEngine(
         if (texts.isEmpty()) return emptyList()
         if (apiKey.isBlank()) return texts
 
-        val modelName = model.ifBlank { "gemini-1.5-flash" }
+        val modelName = model.ifBlank { "gemini-2.5-flash" }
         val prompt = buildString {
             append("Translate the following manga speech bubble text blocks from $sourceLang to $targetLang.\n")
             append(
