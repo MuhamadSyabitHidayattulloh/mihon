@@ -20,6 +20,9 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.core.net.toUri
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import java.io.File
+import logcat.LogPriority
+import okhttp3.Headers
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
@@ -45,11 +48,7 @@ import eu.kanade.tachiyomi.util.system.powerManager
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.system.workManager
-import java.io.File
-import kotlinx.coroutines.launch
-import logcat.LogPriority
 import mihon.app.di.appGraph
-import okhttp3.Headers
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
@@ -59,6 +58,7 @@ import tachiyomi.presentation.core.components.material.AlertDialog
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
+import kotlinx.coroutines.launch
 
 object SettingsAdvancedScreen : SearchableSettings {
 

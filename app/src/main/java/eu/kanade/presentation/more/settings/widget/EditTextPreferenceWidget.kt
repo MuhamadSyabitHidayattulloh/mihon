@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.window.DialogProperties
-import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Cancel
 import mihon.icons.materialsymbols.rounded.Error
@@ -24,6 +23,7 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.AlertDialog
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlinx.coroutines.launch
 
 @Composable
 fun EditTextPreferenceWidget(

@@ -49,7 +49,7 @@ fun CombinedCircularProgressIndicator(
     ) { indeterminate ->
         if (indeterminate) {
             // Indeterminate
-            tachiyomi.presentation.core.components.material.CircularProgressIndicator()
+            CircularProgressIndicator()
         } else {
             // Determinate
             val infiniteTransition = rememberInfiniteTransition(label = "infiniteRotation")
@@ -67,7 +67,7 @@ fun CombinedCircularProgressIndicator(
                 animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec,
                 label = "progress",
             )
-            tachiyomi.presentation.core.components.material.CircularProgressIndicator(
+            CircularProgressIndicator(
                 progress = { animatedProgress },
                 modifier = Modifier.rotate(rotation),
             )

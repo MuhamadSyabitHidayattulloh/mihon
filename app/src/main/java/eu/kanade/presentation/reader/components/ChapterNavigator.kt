@@ -43,14 +43,14 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
 import eu.kanade.presentation.util.isTabletUi
-import kotlin.math.roundToInt
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.SkipNext
 import mihon.icons.materialsymbols.rounded.SkipPrevious
 import tachiyomi.i18n.MR
-import androidx.compose.material3.SliderState
 import tachiyomi.presentation.core.components.material.Slider
+import tachiyomi.presentation.core.components.material.SliderState
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.math.roundToInt
 
 enum class ChapterNavigatorType {
     HORIZONTAL_LTR,
