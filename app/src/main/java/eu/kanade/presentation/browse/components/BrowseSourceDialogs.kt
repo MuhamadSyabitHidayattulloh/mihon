@@ -1,8 +1,8 @@
 package eu.kanade.presentation.browse.components
 
-import androidx.compose.material3.AlertDialog
+import tachiyomi.presentation.core.components.material.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import tachiyomi.presentation.core.components.material.TextButton
 import androidx.compose.runtime.Composable
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR

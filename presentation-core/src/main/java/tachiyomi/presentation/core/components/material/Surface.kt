@@ -38,6 +38,46 @@ import kotlin.math.ln
 @Composable
 @NonRestartableComposable
 fun Surface(
+    modifier: Modifier = Modifier,
+    shape: Shape = RectangleShape,
+    color: Color = MaterialTheme.colorScheme.surface,
+    contentColor: Color = contentColorFor(color),
+    tonalElevation: Dp = 0.dp,
+    shadowElevation: Dp = 0.dp,
+    border: BorderStroke? = null,
+    content: @Composable () -> Unit,
+) {
+    val absoluteElevation = LocalAbsoluteTonalElevation.current + tonalElevation
+    CompositionLocalProvider(
+        LocalContentColor provides contentColor,
+        LocalAbsoluteTonalElevation provides absoluteElevation,
+    ) {
+        Box(
+            modifier = modifier
+                .surface(
+                    shape = shape,
+                    backgroundColor = surfaceColorAtElevation(
+                        color = color,
+                        elevation = absoluteElevation,
+                    ),
+                    border = border,
+                    shadowElevation = shadowElevation,
+                ),
+            propagateMinConstraints = true,
+        ) {
+            content()
+        }
+    }
+}
+
+/**
+ * Surface with additional onLongClick functionality.
+ *
+ * @see androidx.compose.material3.Surface
+ */
+@Composable
+@NonRestartableComposable
+fun Surface(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,

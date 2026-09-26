@@ -1,9 +1,9 @@
 package eu.kanade.presentation.library
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.AlertDialog
+import tachiyomi.presentation.core.components.material.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import tachiyomi.presentation.core.components.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

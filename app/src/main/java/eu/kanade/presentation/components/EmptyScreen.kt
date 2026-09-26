@@ -1,6 +1,6 @@
 package eu.kanade.presentation.components
 
-import androidx.compose.material3.Surface
+import tachiyomi.presentation.core.components.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme

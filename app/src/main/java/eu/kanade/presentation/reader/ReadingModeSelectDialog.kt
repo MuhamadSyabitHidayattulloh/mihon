@@ -3,7 +3,7 @@ package eu.kanade.presentation.reader
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Surface
+import tachiyomi.presentation.core.components.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
