@@ -3,7 +3,6 @@ package eu.kanade.presentation.reader
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +23,7 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.SettingsIconGrid
 import tachiyomi.presentation.core.components.material.IconToggleButton
+import tachiyomi.presentation.core.components.material.Surface
 import tachiyomi.presentation.core.i18n.stringResource
 
 private val ReadingModesWithoutDefault = ReadingMode.entries - ReadingMode.DEFAULT

@@ -25,6 +25,8 @@ import eu.kanade.presentation.theme.colorscheme.TokyoNightColorScheme
 import eu.kanade.presentation.theme.colorscheme.YinYangColorScheme
 import eu.kanade.presentation.theme.colorscheme.YotsubaColorScheme
 import mihon.app.di.appGraph
+import tachiyomi.presentation.core.theme.CustomTypography
+import tachiyomi.presentation.core.theme.Shapes
 
 @Composable
 fun TachiyomiTheme(
@@ -65,6 +67,8 @@ private fun BaseTachiyomiTheme(
                 isAmoled = isAmoled,
             )
         },
+        shapes = Shapes,
+        typography = CustomTypography,
         content = content,
     )
 }

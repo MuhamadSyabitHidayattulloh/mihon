@@ -5,10 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -20,17 +18,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.daysUntil
 import tachiyomi.domain.manga.interactor.FetchInterval
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.WheelTextPicker
+import tachiyomi.presentation.core.components.material.AlertDialog
+import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.absoluteValue
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.daysUntil
 
 @Composable
 fun DeleteChaptersDialog(
